@@ -1,0 +1,34 @@
+<h1>Gestión de Usuarios</h1>
+<a href="{% url 'usuario_crear' %}">Nuevo Usuario</a>
+<br><br>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Nombre Apellido</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Perfil</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for u in usuario_listado %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ u.nombre }} {{ u.apellido }}</td>
+            <td>{{ u.correo }}</td>
+            <td>{{ u.telefono }}</td>
+            <td>{{ u.id_perfil.nombre_perfil }}</td>
+            <td>
+                <a href="{% url 'usuario_ver' u.id_usuario %}">Ver</a> | 
+                <a href="{% url 'usuario_actualiza' u.id_usuario %}">Editar</a> | 
+                <a href="{% url 'usuario_bloquea' u.id_usuario %}">Bloquear</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+<a href="{% url 'main_admin' %}">Volver</a>
