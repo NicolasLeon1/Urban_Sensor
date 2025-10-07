@@ -1,0 +1,11 @@
+<h1>Detalle del Usuario</h1>
+
+<p><strong>Nombre:</strong> {{ usuario_data.nombre }}</p>
+<p><strong>Apellido:</strong> {{ usuario_data.apellido }}</p>
+<p><strong>Correo:</strong> {{ usuario_data.correo }}</p>
+<p><strong>Teléfono:</strong> {{ usuario_data.telefono }}</p>
+<p><strong>Perfil:</strong> {{ usuario_data.id_perfil.nombre_perfil }}</p>
+<p><strong>Estado:</strong> {{ usuario_data.state }}</p>
+
+<br>
+<a href="{% url 'main_usuario' %}">Volver</a>
