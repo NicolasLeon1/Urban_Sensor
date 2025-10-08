@@ -1,0 +1,152 @@
+<h1>Editar Encuesta</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 10px; margin: 10px 0; border: 1px solid #ccc; background: #f8f9fa;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form action="{% url 'encuesta_actualiza' encuesta_data.id %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="id_encuesta" value="{{ encuesta_data.id }}">
+    
+    <label>Título de la Encuesta:</label><br>
+    <input type="text" name="titulo_encuesta" value="{{ encuesta_data.titulo_encuesta }}" required style="width: 100%; padding: 8px; margin-bottom: 10px;"><br>
+    
+    <label>Descripción del Incidente:</label><br>
+    <textarea name="descripcion_incidente" rows="4" required style="width: 100%; padding: 8px; margin-bottom: 10px;">{{ encuesta_data.descripcion_incidente }}</textarea><br>
+    
+    <label>Prioridad:</label><br>
+    <select name="prioridad" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <option value="">Seleccione prioridad</option>
+        {% for key, value in prioridades %}
+        <option value="{{ key }}" {% if encuesta_data.prioridad == key %}selected{% endif %}>{{ value }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label>Departamento:</label><br>
+    <select name="id_departamento" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <option value="">Seleccione departamento</option>
+        {% for depto in departamentos %}
+        <option value="{{ depto.id }}" {% if encuesta_data.id_departamento.id == depto.id %}selected{% endif %}>{{ depto.nombre_departamento }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label>Tipo de Incidencia:</label><br>
+    <select name="id_tipo_incidencia" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <option value="">Seleccione tipo de incidencia</option>
+        {% for incidencia in tipo_incidencias %}
+        <option value="{{ incidencia.id }}" {% if encuesta_data.id_tipo_incidencia.id == incidencia.id %}selected{% endif %}>{{ incidencia.nombre_incidencia }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label>Preguntas Existentes:</label><br>
+    <div id="preguntas-existente-container">
+        {% for pregunta in preguntas %}
+        <div class="pregunta-existente-item" style="margin-bottom: 5px;">
+            <input type="text" name="preguntas_existentes[{{ pregunta.id }}]" value="{{ pregunta.texto_pregunta }}" 
+                   style="width: 70%; padding: 8px; margin-right: 5px;" readonly>
+            <button type="button" class="btn-eliminar-existente" data-pregunta-id="{{ pregunta.id }}" 
+                    style="padding: 8px; background: #dc3545; color: white; border: none;">
+                Eliminar
+            </button>
+            <input type="hidden" name="preguntas_eliminadas[]" id="eliminar_{{ pregunta.id }}" value="0">
+        </div>
+        {% empty %}
+        <div style="padding: 8px; background: #f8f9fa; margin-bottom: 10px;">
+            No hay preguntas existentes
+        </div>
+        {% endfor %}
+    </div>
+    <br>
+    
+    <label>Agregar Nuevas Preguntas:</label><br>
+    <div id="preguntas-nuevas-container">
+        <div class="pregunta-nueva-item">
+            <input type="text" name="preguntas_nuevas[]" placeholder="Ingrese una nueva pregunta" style="width: 80%; padding: 8px; margin-bottom: 5px;">
+            <button type="button" class="btn-eliminar-nueva" style="padding: 8px; background: #dc3545; color: white; border: none;">X</button>
+        </div>
+    </div>
+    <button type="button" id="btn-agregar-nueva" style="padding: 5px 10px; margin-top: 5px; background: #6c757d; color: white; border: none;">
+        + Agregar Nueva Pregunta
+    </button>
+    <br><br>
+    
+    <button type="submit" style="padding: 10px 20px; background: #28a745; color: white; border: none;">Actualizar Encuesta</button>
+    <a href="{% url 'main_encuesta' %}" style="padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; margin-left: 10px;">Cancelar</a>
+</form>
+<br>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar preguntas existentes
+    const containerExistente = document.getElementById('preguntas-existente-container');
+    
+    containerExistente.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-eliminar-existente')) {
+            const preguntaId = e.target.getAttribute('data-pregunta-id');
+            const hiddenInput = document.getElementById('eliminar_' + preguntaId);
+            const inputTexto = e.target.previousElementSibling;
+            
+            if (e.target.textContent === 'Eliminar') {
+                // Marcar para eliminar
+                hiddenInput.value = '1';
+                inputTexto.style.textDecoration = 'line-through';
+                inputTexto.style.backgroundColor = '#ffe6e6';
+                e.target.textContent = 'Restaurar';
+                e.target.style.background = '#6c757d';
+            } else {
+                // Restaurar
+                hiddenInput.value = '0';
+                inputTexto.style.textDecoration = 'none';
+                inputTexto.style.backgroundColor = '';
+                e.target.textContent = 'Eliminar';
+                e.target.style.background = '#dc3545';
+            }
+        }
+    });
+    
+    // Manejar nuevas preguntas
+    const btnAgregarNueva = document.getElementById('btn-agregar-nueva');
+    const containerNuevas = document.getElementById('preguntas-nuevas-container');
+    
+    function actualizarBotonesNuevas() {
+        const botones = containerNuevas.querySelectorAll('.btn-eliminar-nueva');
+        if (botones.length === 1) {
+            botones[0].disabled = true;
+        } else {
+            botones.forEach(boton => boton.disabled = false);
+        }
+    }
+    
+    function agregarPreguntaNueva() {
+        const nuevaPregunta = document.createElement('div');
+        nuevaPregunta.className = 'pregunta-nueva-item';
+        nuevaPregunta.innerHTML = `
+            <input type="text" name="preguntas_nuevas[]" placeholder="Ingrese una nueva pregunta" style="width: 80%; padding: 8px; margin-bottom: 5px;">
+            <button type="button" class="btn-eliminar-nueva" style="padding: 8px; background: #dc3545; color: white; border: none;">X</button>
+        `;
+        containerNuevas.appendChild(nuevaPregunta);
+        actualizarBotonesNuevas();
+    }
+    
+    function eliminarPreguntaNueva(boton) {
+        boton.closest('.pregunta-nueva-item').remove();
+        actualizarBotonesNuevas();
+    }
+    
+    // Event listeners para nuevas preguntas
+    btnAgregarNueva.addEventListener('click', agregarPreguntaNueva);
+    
+    containerNuevas.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-eliminar-nueva')) {
+            eliminarPreguntaNueva(e.target);
+        }
+    });
+    
+    // Inicializar estado de botones
+    actualizarBotonesNuevas();
+});
+</script>
