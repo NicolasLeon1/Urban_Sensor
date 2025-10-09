@@ -31,12 +31,15 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'registration',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core',
+    'usuarios',
 ]
 
 MIDDLEWARE = [
@@ -76,9 +79,9 @@ DATABASES = {
     "default": {
         'HOST': 'localhost',
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'base_datos_web',
+        'NAME': 'muni_db',
         'USER': 'postgres',
-        'PASSWORD': '29raul.leon',
+        'PASSWORD': '12345',
         'PORT': '5432',
     }
 }
@@ -113,6 +116,8 @@ TIME_ZONE = 'Chile/Continental'
 USE_I18N = True
 
 USE_TZ = True
+LOGIN_REDIRECT_URL = 'check_profile'
+LOGOUT_REDIRECT_URL = 'login'
 
 
 # Static files (CSS, JavaScript, Images)
