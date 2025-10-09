@@ -9,4 +9,6 @@ urlpatterns = [
     path('usuario_actualiza/<int:usuario_id>/', views.usuario_actualiza, name='usuario_actualiza'),
     path('usuario_actualiza/', views.usuario_actualiza, name='usuario_actualiza_post'),
     path('usuario_bloquea/<int:usuario_id>/', views.usuario_bloquea, name='usuario_bloquea'),
+    path('main_usuario_bloqueado/', views.main_usuario_bloqueado, name='main_usuario_bloqueado'),
+    path('usuario_desbloquea/<int:usuario_id>/', views.usuario_desbloquea, name='usuario_desbloquea'),
 ]
