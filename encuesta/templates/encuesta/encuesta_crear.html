@@ -1,0 +1,105 @@
+<h1>Crear Encuesta</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 10px; margin: 10px 0; border: 1px solid #ccc; background: #f8f9fa;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form action="{% url 'encuesta_guardar' %}" method="POST">
+    {% csrf_token %}
+    
+    <label>Título de la Encuesta:</label><br>
+    <input type="text" name="titulo_encuesta" required style="width: 100%; padding: 8px; margin-bottom: 10px;"><br>
+    
+    <label>Descripción del Incidente:</label><br>
+    <textarea name="descripcion_incidente" rows="4" required style="width: 100%; padding: 8px; margin-bottom: 10px;"></textarea><br>
+    
+    <label>Prioridad:</label><br>
+    <select name="prioridad" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <option value="">Seleccione prioridad</option>
+        {% for key, value in prioridades %}
+        <option value="{{ key }}">{{ value }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label>Departamento:</label><br>
+    <select name="id_departamento" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <option value="">Seleccione departamento</option>
+        {% for depto in departamentos %}
+        <option value="{{ depto.id }}">{{ depto.nombre_departamento }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label>Tipo de Incidencia:</label><br>
+    <select name="id_tipo_incidencia" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <option value="">Seleccione tipo de incidencia</option>
+        {% for incidencia in tipo_incidencias %}
+        <option value="{{ incidencia.id }}">{{ incidencia.nombre_incidencia }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <label>Preguntas Adicionales:</label><br>
+    <div id="preguntas-container">
+        <div class="pregunta-item">
+            <input type="text" name="preguntas[]" placeholder="Ingrese una pregunta" style="width: 80%; padding: 8px; margin-bottom: 5px;">
+            <button type="button" class="btn-eliminar" style="padding: 8px; background: #dc3545; color: white; border: none;">X</button>
+        </div>
+    </div>
+    <button type="button" id="btn-agregar" style="padding: 5px 10px; margin-top: 5px; background: #6c757d; color: white; border: none;">
+        + Agregar Pregunta
+    </button>
+    <br><br>
+    
+    <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none;">Guardar Encuesta</button>
+</form>
+<br>
+<a href="{% url 'main_encuesta' %}">Volver al Listado</a>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAgregar = document.getElementById('btn-agregar');
+    const container = document.getElementById('preguntas-container');
+    
+    function actualizarBotonesEliminar() {
+        const botones = container.querySelectorAll('.btn-eliminar');
+        // Si solo queda una pregunta, deshabilitar su botón de eliminar
+        if (botones.length === 1) {
+            botones[0].disabled = true;
+        } else {
+            // Si hay más de una, habilitar todos los botones
+            botones.forEach(boton => boton.disabled = false);
+        }
+    }
+    
+    function agregarPregunta() {
+        const nuevaPregunta = document.createElement('div');
+        nuevaPregunta.className = 'pregunta-item';
+        nuevaPregunta.innerHTML = `
+            <input type="text" name="preguntas[]" placeholder="Ingrese una pregunta" style="width: 80%; padding: 8px; margin-bottom: 5px;">
+            <button type="button" class="btn-eliminar" style="padding: 8px; background: #dc3545; color: white; border: none;">X</button>
+        `;
+        container.appendChild(nuevaPregunta);
+        actualizarBotonesEliminar();
+    }
+    
+    function eliminarPregunta(boton) {
+        boton.closest('.pregunta-item').remove();
+        actualizarBotonesEliminar();
+    }
+    
+    // Event listeners
+    btnAgregar.addEventListener('click', agregarPregunta);
+    
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-eliminar')) {
+            eliminarPregunta(e.target);
+        }
+    });
+    
+    // Inicializar estado de botones
+    actualizarBotonesEliminar();
+});
+</script>

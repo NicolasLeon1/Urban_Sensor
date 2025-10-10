@@ -1,0 +1,31 @@
+{% block content %}
+<h1>Detalle de la Encuesta</h1>
+
+<p><strong>Título:</strong> {{ encuesta_data.titulo_encuesta }}</p>
+<p><strong>Departamento:</strong> {{ encuesta_data.id_departamento.nombre_departamento }}</p>
+<p><strong>Tipo de Incidencia:</strong> {{ encuesta_data.id_tipo_incidencia.nombre_incidencia }}</p>
+<p><strong>Prioridad:</strong> 
+    {% if encuesta_data.prioridad == 'alta' %}
+        Alta
+    {% elif encuesta_data.prioridad == 'media' %}
+        Media
+    {% else %}
+        Baja
+    {% endif %}
+</p>
+<p><strong>Estado:</strong> {% if encuesta_data.activo %}Activo{% else %}Bloqueado{% endif %}</p>
+
+<br>
+
+<h2>Preguntas</h2>
+{% if preguntas %}
+    {% for pregunta in preguntas %}
+    <p><strong>Pregunta {{ forloop.counter }}:</strong> {{ pregunta.texto_pregunta }}</p>
+    {% endfor %}
+{% else %}
+    <p>No hay preguntas en esta encuesta.</p>
+{% endif %}
+
+<br>
+<a href="{% url 'main_encuesta' %}">Volver</a>
+{% endblock %}

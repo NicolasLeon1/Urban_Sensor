@@ -1,0 +1,68 @@
+{% block content %}
+<h1>Gestión de Encuestas</h1>
+<a href="{% url 'encuesta_crear' %}">Nueva Encuesta</a>
+<br><br>
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 10px; margin: 10px 0; border: 1px solid #ccc; background: #f8f9fa;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<table border="1" width="100%">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Departamento</th>
+            <th>Tipo Incidencia</th>
+            <th>Prioridad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for encuesta in encuesta_listado %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ encuesta.titulo_encuesta }}</td>
+            <td>{{ encuesta.id_departamento.nombre_departamento }}</td>
+            <td>{{ encuesta.id_tipo_incidencia.nombre_incidencia }}</td>
+            <td>
+                {% if encuesta.prioridad == 'alta' %}
+                    Alta
+                {% elif encuesta.prioridad == 'media' %}
+                    Media
+                {% else %}
+                    Baja
+                {% endif %}
+            </td>
+            <td>
+                {% if encuesta.activo %}
+                    Activo
+                {% else %}
+                    Bloqueado
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'encuesta_ver' encuesta.id %}">Ver</a> | 
+                <a href="{% url 'encuesta_actualiza' encuesta.id %}">Editar</a> | 
+                {% if encuesta.activo %}
+                <a href="{% url 'encuesta_bloquea' encuesta.id %}">Bloquear</a>
+                {% else %}
+                <a href="{% url 'encuesta_activa' encuesta.id %}">Activar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align: center;">No hay encuestas registradas</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+<a href="{% url 'main_admin' %}">Volver</a>
+{% endblock %}
