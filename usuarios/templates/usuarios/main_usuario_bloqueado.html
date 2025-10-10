@@ -1,0 +1,24 @@
+<h4>Gestión de Usuarios Bloqueados</h4>
+<hr>
+<a href="{% url 'main_usuario' %}">Volver a Usuarios Activos</a>
+<br><br>
+<hr>
+
+<table border="1">
+    <thead>
+        <th>Nombre Apellido</th>
+        <th>Correo</th>
+        <th>Acciones</th>
+    </thead>
+    <tbody>
+        {% for usuario in usuario_listado %}
+        <tr>
+            <td>{{ usuario.nombre }} {{ usuario.apellido }}</td>
+            <td>{{ usuario.correo }}</td>
+            <td>
+                <a href="{% url 'usuario_desbloquea' usuario.id_usuario %}">Desbloquear</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -182,24 +182,64 @@ def usuario_actualiza(request, usuario_id=None):
         messages.error(request, 'No tiene permisos')
         return redirect('main_admin')
 
-# Vista para bloquear usuario
+
+
 @login_required
-def usuario_bloquea(request, usuario_id=None):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id)
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tiene perfil asociado')
-        return redirect('check_profile')
+def usuario_bloquea(request, usuario_id):
     
-    if profile.group_id == 1:
-        usuario_count = Usuario.objects.filter(pk=usuario_id).count()
-        if usuario_count == 0:
-            messages.error(request, 'El usuario no existe')
-            return redirect('main_usuario')
-        
+    try:
+        current_user_profile = Profile.objects.get(user=request.user)
+        if current_user_profile.group.name != 'Admin':
+            messages.error(request, 'No tienes permisos para realizar esta acción.')
+            return redirect('home')
+    except Profile.DoesNotExist:
+        messages.error(request, 'Tu perfil no está configurado.')
+        return redirect('logout')
+
+    try:
+        # CAMBIA ESTA LÍNEA
         Usuario.objects.filter(pk=usuario_id).update(state='Bloqueado')
-        messages.success(request, 'Usuario bloqueado correctamente')
-        return redirect('main_usuario')
+        messages.success(request, 'Usuario bloqueado correctamente.')
+    except Exception as e:
+        messages.error(request, f'Error al bloquear el usuario: {e}')
+    
+    return redirect('main_usuario')
+
+
+
+@login_required
+def main_usuario_bloqueado(request):
+    try:
+        profile = Profile.objects.get(user_id=request.user.id) 
+    except Profile.DoesNotExist:
+        messages.add_message(request, messages.INFO, 'Hubo un error de perfil')
+        return redirect('login')
+
+    if profile.group_id == 1: 
+   
+        usuarios_bloqueados = Usuario.objects.filter(state='Bloqueado').order_by('nombre')
+        
+        template_name = 'usuarios/main_usuario_bloqueado.html'
+        # Envía la lista de Usuarios, no de Profiles
+        return render(request, template_name, {'usuario_listado': usuarios_bloqueados})
     else:
-        messages.error(request, 'No tiene permisos')
-        return redirect('main_admin')
+        return redirect('logout')
+
+
+
+@login_required
+def usuario_desbloquea(request, usuario_id):
+    try:
+        profile = Profile.objects.get(user_id=request.user.id) 
+    except Profile.DoesNotExist:
+        messages.add_message(request, messages.INFO, 'Hubo un error de perfil')
+        return redirect('logout')
+
+    if profile.group_id == 1:
+     
+        Usuario.objects.filter(pk=usuario_id).update(state='Activo')
+        
+        messages.add_message(request, messages.INFO, 'Usuario desbloqueado')
+        return redirect('main_usuario_bloqueado')
+    else:
+        return redirect('logout')

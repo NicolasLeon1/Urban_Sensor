@@ -10,9 +10,8 @@ class Profile(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, default=1) 
     token_app_session = models.CharField(max_length = 240,null=True, blank=True, default='')
     first_session = models.CharField(max_length = 240,null=True, blank=True, default='Si')
+    state = models.CharField(max_length=100, null=True, blank=True, default='Activo')
+
 
     class Meta:
         ordering = ['user__username']
-
-
-
