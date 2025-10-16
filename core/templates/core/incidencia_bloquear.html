@@ -1,0 +1,12 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h2>Bloquear incidencia</h2>
+
+<p>¿Deseas bloquear la incidencia "<strong>{{ incidencia.titulo }}</strong>"?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Bloquear</button>
+    <a href="{% url 'lista_incidencias' %}">Cancelar</a>
+</form>
+{% endblock %}

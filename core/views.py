@@ -6,12 +6,13 @@ from django.contrib.auth.models import Group, User # importa los models de usuar
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator #permite la paqinación
 from django.db.models import Avg, Count, Q #agrega funcionalidades de agregación a nuestros QuerySets
 from django.http import (HttpResponse, HttpResponseBadRequest,
-                         HttpResponseNotFound, HttpResponseRedirect) #Salidas alternativas al flujo de la aplicación se explicará mas adelante
+                        HttpResponseNotFound, HttpResponseRedirect) #Salidas alternativas al flujo de la aplicación se explicará mas adelante
 from django.shortcuts import redirect, render #permite renderizar vistas basadas en funciones o redireccionar a otras funciones
 from django.template import RequestContext # contexto del sistema
 from django.views.decorators.csrf import csrf_exempt #decorador que nos permitira realizar conexiones csrf
-
 from registration.models import Profile #importa el modelo profile, el que usaremos para los perfiles de usuarios
+from django.http import HttpResponse
+from django.shortcuts import redirect
 
 # Create your views here.
 def home(request):
@@ -47,3 +48,6 @@ def main_admin(request):
         return render(request,template_name)
     else:
         return redirect('logout')
+
+def index(request):
+    return redirect('login')
