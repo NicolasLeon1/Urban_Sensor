@@ -1,0 +1,55 @@
+<h1>Actualizar Dirección</h1>
+<hr>
+
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li style="color:red;">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <p>
+        <label for="nombre">Nombre de la Dirección:</label>
+        <input type="text" id="nombre" name="nombre_direccion" value="{{ direccion_data.nombre_direccion }}">
+    </p>
+    <button type="submit">Actualizar</button>
+</form>
+<br>
+<a href="{% url 'main_direccion' %}">Volver a la lista</a>
+
+<h1>Gestión de Direcciones (Bloqueadas)</h1>
+<hr>
+<a href="{% url 'main_direccion' %}">Volver a la lista de Activas</a>
+<br><br>
+
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li style="color:green;">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<table border="1" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Nombre Dirección</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in direcciones_listado %}
+        <tr>
+            <td>{{ d.nombre_direccion }}</td>
+            <td>{{ d.estado }}</td>
+            <td>
+                <a href="{% url 'direccion_desbloquea' d.id_direccion %}">Desbloquear</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
