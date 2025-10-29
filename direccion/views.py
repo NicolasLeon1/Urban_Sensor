@@ -3,6 +3,7 @@ from .models import Direccion
 from django.contrib import messages
 from .models import Direccion
 from django.contrib.auth.decorators import login_required
+from registration.models import Profile
 
 #necesaria para ver los bloqear
 @login_required
@@ -64,3 +65,11 @@ def direccion_bloquea_activa(request, id_direccion):
     except Profile.DoesNotExist:
         messages.error(request, 'No tienes un perfil asignado.')
         return redirect('logout')
+
+@login_required
+def main_direccion_bloqueadas(request):
+    pass
+
+@login_required
+def direccion_desbloqueadas(request):
+    pass
