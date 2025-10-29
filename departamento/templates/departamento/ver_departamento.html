@@ -1,0 +1,9 @@
+{% block content %}
+<h1>Detalle del departamento</h1>
+
+<p><strong>Nombre del departamento:</strong> {{ departamento_data.nombre_departamento }}</p>
+<p><strong>Direccion:</strong> {{ departamento_data.direccion }}</p>
+<p><strong>Estado:</strong> {% if departamento_data.activo %}Activo{% else %}Bloqueado{% endif %}</p>
+
+<a href="{% url 'main_departamento' %}">Volver</a>
+{% endblock %}

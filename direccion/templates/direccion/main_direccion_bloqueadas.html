@@ -1,0 +1,33 @@
+<h1>Gestión de Direcciones (Bloqueadas)</h1>
+<hr>
+<a href="{% url 'main_direccion' %}">Volver a la lista de Activas</a>
+<br><br>
+
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li style="color:green;">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<table border="1" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Nombre Dirección</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in direcciones_listado %}
+        <tr>
+            <td>{{ d.nombre_direccion }}</td>
+            <td>{{ d.estado }}</td>
+            <td>
+                <a href="{% url 'direccion_desbloquea' d.id_direccion %}">Desbloquear</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

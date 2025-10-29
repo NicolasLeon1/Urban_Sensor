@@ -1,0 +1,57 @@
+{% block content %}
+<h1>Gestión de Departamentos</h1>
+<a href="{% url 'crear_departamento' %}">Nuevo Departamento</a>
+<br><br>
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 10px; margin: 10px 0; border: 1px solid #ccc; background: #f8f9fa;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<table border="1" width="100%">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Direccion</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for departamento in listado_departamento %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ departamento.nombre_departamento }}</td>
+            <td>{{ departamento.direccion.nombre_direccion }}</td>
+            <td>
+                {% if departamento.activo %}
+                    Activo
+                {% else %}
+                    Bloqueado
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'ver_departamento' departamento.id %}">Ver</a> | 
+                <a href="{% url 'editar_departamento' departamento.id %}">Editar</a> | 
+                {% if departamento.activo %}
+                <a href="{% url 'bloquear_departamento' departamento.id %}">Bloquear</a>
+                {% else %}
+                <a href="{% url 'activar_departamento' departamento.id %}">Activar</a>
+                {% endif %}
+                <a href="{% url 'eliminar_departamento' departamento.id %}">Eliminar</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align: center;">No hay departamentos registrados</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+<a href="{% url 'main_admin' %}">Volver</a>
+{% endblock %}
