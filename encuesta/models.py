@@ -1,20 +1,7 @@
 from django.db import models
+from departamento.models import Departamento
 
 # Create your models here.
-
-##############################################
-
-#Temporal, en espera al modulo Departamento
-class Departamento(models.Model):
-    nombre_departamento = models.CharField(max_length=200, blank=False)
-    activo = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = 'departamento'
-        verbose_name = 'Departamento'
-        verbose_name_plural = 'Departamentos'
-
-##############################################
 
 class TipoIncidencia(models.Model):
     nombre_incidencia = models.CharField(max_length=240)
