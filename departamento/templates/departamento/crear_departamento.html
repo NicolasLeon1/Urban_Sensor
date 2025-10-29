@@ -1,0 +1,28 @@
+<h1>Crear Departamento</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 10px; margin: 10px 0; border: 1px solid #ccc; background: #f8f9fa;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form action="{% url 'crear_departamento' %}" method="POST">
+    {% csrf_token %}
+    
+    <label>Nombre Departamento:</label><br>
+    <input type="text" name="nombre_departamento" required style="width: 100%; padding: 8px; margin-bottom: 10px;"><br>
+    
+    <label>Direccion:</label><br>
+    <select name="direccion" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <option value="">Seleccione direccion</option>
+        {% for dir in direcciones %}
+        <option value="{{ dir.id_direccion }}">{{ dir.nombre_direccion }}</option>
+        {% endfor %}
+    </select><br>
+    
+    <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none;">Guardar Departamento</button>
+</form>
+<br>
+<a href="{% url 'main_departamento' %}">Cancelar</a>

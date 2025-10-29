@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'usuarios',
+    "direccion",
 ]
 
 MIDDLEWARE = [
@@ -80,8 +81,10 @@ DATABASES = {
         'HOST': 'localhost',
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'muni_db',
+        'NAME': 'urban_sensor',
         'USER': 'postgres',
         'PASSWORD': '12345',
+        'PASSWORD': 'amanda',
         'PORT': '5432',
     }
 }
