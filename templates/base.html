@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Municipalidad{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="left">
+            <div class="menu-container">
+                <div class="menu" id="menu">
+                    <img src="{% static 'icons/horizontal-line.svg' %}" alt="">
+                </div>
+            </div>
+            <div class="brand">
+                <img src="{% static 'images/logo.jpg' %}" alt="icon-municipalidad" class="logo">
+                <span class="name">Municipalidad Puente Alto</span>
+            </div>
+        </div>
+        <div class="right">
+            <a href="#">
+                <img src="{% static 'icons/bell.svg' %}" alt="notification">
+            </a>
+            <a href="#"></a>
+            <a href="#"></a>
+            <img src="{% static 'icons/profile.svg' %}" alt="profile-icon">
+        </div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <nav>
+            <ul class="sidebar-list">
+                {% block sidebar_content %}
+                <li>
+                    <a href="#" class="selected">
+                        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                {% endblock %}
+            </ul>
+        </nav>
+    </div>
+
+    <main id="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

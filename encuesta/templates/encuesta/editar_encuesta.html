@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Editar Encuesta</h1>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <form action="{% url 'editar_encuesta' encuesta_data.id %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id_encuesta" value="{{ encuesta_data.id }}">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_titulo" class="form-label">Título de la Encuesta:</label>
+                        <input type="text" name="titulo_encuesta" id="id_titulo" class="form-control" required value="{{ encuesta_data.titulo_encuesta }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="id_prioridad" class="form-label">Prioridad:</label>
+                        <select name="prioridad" id="id_prioridad" class="form-select" required>
+                            <option value="">Seleccione prioridad</option>
+                            {% for key, value in prioridades %}
+                            <option value="{{ key }}" {% if encuesta_data.prioridad == key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_departamento" class="form-label">Departamento:</label>
+                        <select name="id_departamento" id="id_departamento" class="form-select" required>
+                            <option value="">Seleccione departamento</option>
+                            {% for dep in departamentos %}
+                            <option value="{{ dep.id }}" {% if encuesta_data.id_departamento.id == dep.id %}selected{% endif %}>{{ dep.nombre_departamento }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_tipo_incidencia" class="form-label">Tipo Incidencia:</label>
+                        <select name="id_tipo_incidencia" id="id_tipo_incidencia" class="form-select" required>
+                            <option value="">Seleccione tipo de incidencia</option>
+                            {% for tipo in tipo_incidencias %}
+                            <option value="{{ tipo.id }}" {% if encuesta_data.id_tipo_incidencia.id == tipo.id %}selected{% endif %}>{{ tipo.nombre_incidencia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_descripcion" class="form-label">Descripción del Incidente:</label>
+                    <textarea name="descripcion_incidente" id="id_descripcion" rows="4" class="form-control" required>{{ encuesta_data.descripcion_incidente }}</textarea>
+                </div>
+
+                <hr class="form-divider">
+
+                <div class="form-group">
+                    <h2 class="form-subtitle">Preguntas Existentes</h2>
+                    {% for pregunta in preguntas_existentes %}
+                    <div class="pregunta-existente-item">
+                        <input type="text" name="preguntas_existentes[{{ pregunta.id }}]" class="form-control" value="{{ pregunta.texto_pregunta }}">
+                        <div class="form-check">
+                            <input type="checkbox" name="eliminar_preguntas[]" value="{{ pregunta.id }}" id="eliminar_{{ pregunta.id }}" class="form-check-input">
+                            <label for="eliminar_{{ pregunta.id }}" class="form-check-label">Eliminar</label>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p>No hay preguntas existentes.</p>
+                    {% endfor %}
+                </div>
+
+                <hr class="form-divider">
+
+                <div class="form-group">
+                    <h2 class="form-subtitle">Agregar Nuevas Preguntas</h2>
+                    <div id="preguntas-nuevas-container">
+                        <div class="pregunta-nueva-item">
+                            <input type="text" name="preguntas_nuevas[]" class="form-control" placeholder="Ingrese una nueva pregunta">
+                            <button type="button" class="btn btn-sm btn-danger btn-eliminar-nueva" disabled>X</button>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-agregar-nueva" class="btn btn-sm btn-success" style="margin-top: 1rem;">Agregar Pregunta</button>
+                </div>
+                
+                <div class="action-buttons-footer">
+                    <a href="{% url 'main_encuesta' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos de Formulario */
+    .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color); }
+    .form-control,
+    .form-select { width: 100%; padding: 0.75rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 0.3rem; background-color: #FFFFFF; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .form-control:focus,
+    .form-select:focus { outline: none; border-color: var(--color-principal); box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2); }
+    textarea.form-control { min-height: 100px; }
+    .form-divider { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
+    .form-subtitle { color: var(--color-principal); font-size: 1.2rem; margin-bottom: 1rem; }
+
+    /* Estilos de Preguntas Dinámicas */
+    .pregunta-existente-item,
+    .pregunta-nueva-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .pregunta-existente-item input,
+    .pregunta-nueva-item input {
+        flex-grow: 1; /* El input toma todo el espacio disponible */
+    }
+
+    /* Checkbox de eliminar */
+    .form-check { display: flex; align-items: center; gap: 0.4rem; }
+    .form-check-input { width: 1rem; height: 1rem; }
+    .form-check-label { font-size: 0.9rem; color: var(--error); cursor: pointer; }
+
+    /* Botones */
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background-color: var(--color-principal); color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-success { background-color: var(--completado); color: white; }
+    .btn-danger { background-color: var(--error); color: white; }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .btn-eliminar-nueva { padding: 0.4rem 0.6rem; font-size: 0.8rem; line-height: 1; }
+    
+    .action-buttons-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; }
+
+    /* ----- Mensajes de Alerta ----- */
+    .messages-container { list-style: none; padding: 0; margin: 0 0 1rem 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.error {
+        color: #842029; background-color: #f8d7da; border-color: #f5c2c7;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lógica para NUEVAS preguntas
+    const btnAgregarNueva = document.getElementById('btn-agregar-nueva');
+    const containerNuevas = document.getElementById('preguntas-nuevas-container');
+    
+    function actualizarBotonesNuevas() {
+        const botones = containerNuevas.querySelectorAll('.btn-eliminar-nueva');
+        if (botones.length === 1) {
+            // Deshabilitar si es el último
+            botones[0].disabled = true;
+            // Si el input está vacío, no es requerido
+            const input = botones[0].closest('.pregunta-nueva-item').querySelector('input');
+            if (input.value.trim() === '') {
+                input.required = false;
+            } else {
+                input.required = true;
+            }
+        } else {
+            // Habilitar todos y hacerlos requeridos
+            botones.forEach(boton => {
+                boton.disabled = false;
+                boton.closest('.pregunta-nueva-item').querySelector('input').required = true;
+            });
+        }
+    }
+    
+    function agregarPreguntaNueva() {
+        const nuevaPregunta = document.createElement('div');
+        nuevaPregunta.className = 'pregunta-nueva-item';
+        nuevaPregunta.innerHTML = `
+            <input type="text" name="preguntas_nuevas[]" class="form-control" placeholder="Ingrese una nueva pregunta" required>
+            <button type="button" class="btn btn-sm btn-danger btn-eliminar-nueva">X</button>
+        `;
+        containerNuevas.appendChild(nuevaPregunta);
+        actualizarBotonesNuevas();
+    }
+    
+    function eliminarPreguntaNueva(boton) {
+        boton.closest('.pregunta-nueva-item').remove();
+        actualizarBotonesNuevas();
+    }
+    
+    btnAgregarNueva.addEventListener('click', agregarPreguntaNueva);
+    
+    containerNuevas.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-eliminar-nueva')) {
+            eliminarPreguntaNueva(e.target);
+        }
+    });
+
+    // Lógica para PREGUNTAS EXISTENTES (deshabilitar input si se marca eliminar)
+    const containerExistentes = document.querySelectorAll('.pregunta-existente-item');
+    containerExistentes.forEach(item => {
+        const checkbox = item.querySelector('.form-check-input');
+        const input = item.querySelector('.form-control');
+        
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                input.disabled = true;
+                input.style.textDecoration = 'line-through';
+            } else {
+                input.disabled = false;
+                input.style.textDecoration = 'none';
+            }
+        });
+    });
+
+    actualizarBotonesNuevas();
+});
+</script>
+{% endblock %}

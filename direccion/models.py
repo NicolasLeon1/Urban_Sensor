@@ -3,7 +3,7 @@ from django.db import models
 class Direccion(models.Model):
     id_direccion = models.AutoField(primary_key=True)
     nombre_direccion = models.CharField(max_length=100)
-    estado = models.CharField(max_length=20, default='Activo')
+    activo = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'direccion'

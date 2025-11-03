@@ -2,74 +2,83 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Direccion
 from django.contrib import messages
 from .models import Direccion
-from django.contrib.auth.decorators import login_required
-from registration.models import Profile
+from register.decorators import *
+from register.models import Profile
 
-#necesaria para ver los bloqear
-@login_required
+@secpla_required
 def main_direccion(request):
+    direcciones_listado = Direccion.objects.all().order_by('nombre_direccion')
+    return render(request, 'direccion/main_direccion.html', {'direcciones_listado': direcciones_listado})
+
+@secpla_required
+def nueva_direccion(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_direccion')
+        if not nombre:
+            messages.error(request, 'El nombre no puede estar vacío.')
+            return redirect('nueva_direccion')
+        direccion = Direccion(nombre_direccion=nombre)
+        direccion.save()
+        messages.success(request, 'Dirección creada correctamente.')
+        return redirect('main_direccion')
+    else:
+        return render(request, 'direccion/nueva_direccion.html')
+
+@secpla_required
+def editar_direccion(request, id):
     try:
-        profile = Profile.objects.get(user=request.user)
-        if profile.group.name == 'SECPLA':
-            direcciones_listado = Direccion.objects.all().order_by('nombre_direccion')
-            return render(request, 'direccion/main_direccion.html', {'direcciones_listado': direcciones_listado})
-        else:
-            messages.error(request, 'No tienes permisos para acceder a esta sección.')
-            return redirect('main_admin') # O a la página de inicio que corresponda
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tienes un perfil asignado. Contacta al administrador.')
-        return redirect('logout')
+        direccion = Direccion.objects.get(pk=id)
+    except Direccion.DoesNotExist:
+        messages.error(request, 'La direccion no existe')
+        return redirect('main_direccion')
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_direccion')
+        if not nombre:
+            messages.error(request, 'El nombre no puede estar vacío.')
+            return redirect('editar_direccion', id)
+        
+        direccion.nombre_direccion = nombre
+        direccion.save()
+        messages.success(request, 'Dirección actualizada correctamente.')
+        return redirect('main_direccion')
+    else:
+        return render(request, 'direccion/editar_direccion.html', {'direccion_data': direccion})
     
-@login_required
-def direccion_actualiza(request, id_direccion):
+@secpla_required
+def toggle_direccion(request, id):
     try:
-        profile = Profile.objects.get(user=request.user)
-        if profile.group.name == 'SECPLA':
-            direccion = get_object_or_404(Direccion, pk=id_direccion)
-            if request.method == 'POST':
-                nombre = request.POST.get('nombre_direccion')
-                if not nombre:
-                    messages.error(request, 'El nombre no puede estar vacío.')
-                    return render(request, 'direccion/direccion_actualiza.html', {'direccion_data': direccion})
-                
-                direccion.nombre_direccion = nombre
-                direccion.save()
-                messages.success(request, 'Dirección actualizada correctamente.')
-                return redirect('main_direccion')
-            else:
-                return render(request, 'direccion/direccion_actualiza.html', {'direccion_data': direccion})
+        direccion = Direccion.objects.get(pk=id)
+        direccion.activo = not direccion.activo
+        if direccion.activo:
+            messages.success(request, f'La dirección "{direccion.nombre_direccion}" ha sido desbloqueada.')
         else:
-            messages.error(request, 'No tienes permisos para esta acción.')
-            return redirect('main_admin')
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tienes un perfil asignado.')
-        return redirect('logout')
-    
-@login_required
-def direccion_bloquea_activa(request, id_direccion):
+            messages.success(request, f'La dirección "{direccion.nombre_direccion}" ha sido bloqueada.')
+        direccion.save()
+        return redirect('main_direccion')
+    except Direccion.DoesNotExist:
+        messages.error(request, 'La direccion no existe')
+        return redirect('main_direccion')
+
+@secpla_required
+def eliminar_direccion(request, id):
     try:
-        profile = Profile.objects.get(user=request.user)
-        if profile.group.name == 'SECPLA':
-            direccion = get_object_or_404(Direccion, pk=id_direccion)
-            if direccion.estado == 'Activo':
-                direccion.estado = 'Bloqueado'
-                messages.success(request, f'La dirección "{direccion.nombre_direccion}" ha sido bloqueada.')
-            else:
-                direccion.estado = 'Activo'
-                messages.success(request, f'La dirección "{direccion.nombre_direccion}" ha sido activada.')
-            direccion.save()
+        direccion = Direccion.objects.get(pk=id)
+        if direccion.activo:
+            messages.error(request, 'La dirección debe estar bloqueada para poder eliminarla.')
             return redirect('main_direccion')
-        else:
-            messages.error(request, 'No tienes permisos para esta acción.')
-            return redirect('main_admin')
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tienes un perfil asignado.')
-        return redirect('logout')
+        direccion.delete()
+        messages.success(request, 'Direccion eliminada con exito.')
+        return redirect('main_direccion')
+    except Direccion.DoesNotExist:
+        messages.error(request, 'La direccion no existe')
+        return redirect('main_direccion')
 
-@login_required
-def main_direccion_bloqueadas(request):
-    pass
-
-@login_required
-def direccion_desbloqueadas(request):
-    pass
+@secpla_required
+def ver_direccion(request, id):
+    try:
+        direccion_data = Direccion.objects.get(pk=id)
+        return render(request, 'direccion/ver_direccion.html', {'direccion_data': direccion_data})
+    except Direccion.DoesNotExist:
+        messages.error(request, 'La direccion no existe')
+        return redirect('main_direccion')
+    

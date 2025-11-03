@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Editar Usuario</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form action="{% url 'editar_usuario' usuario_data.id %}" method="POST">
+                {% csrf_token %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_nombre" class="form-label">Nombre:</label>
+                        <input type="text" name="nombre" id="id_nombre" class="form-control" required value="{{ usuario_data.nombre }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="id_apellido" class="form-label">Apellido:</label>
+                        <input type="text" name="apellido" id="id_apellido" class="form-control" required value="{{ usuario_data.apellido }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_username" class="form-label">Username:</label>
+                        <input type="text" name="username" id="id_username" class="form-control" required value="{{ usuario_data.username }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="id_email" class="form-label">Correo:</label>
+                        <input type="email" name="email" id="id_email" class="form-control" required value="{{ usuario_data.email }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_telefono" class="form-label">Teléfono:</label>
+                        <input type="text" name="telefono" id="id_telefono" class="form-control" required value="{{ usuario_data.telefono }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="perfil-select" class="form-label">Perfil:</label>
+                        <select name="perfil" required id="perfil-select" class="form-select">
+                            <option value="">Seleccione un perfil</option>
+                            {% for perfil in perfiles_listado %}
+                            <option value="{{ perfil.id }}" {% if usuario_data.perfil.id == perfil.id %} selected {% endif %} >{{ perfil }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div id="direccion-field" class="dynamic-field form-group" style="grid-column: 1 / -1;">
+                    <label for="direccion-select" class="form-label">Dirección específica:</label>
+                    <select name="direccion_especifica" id="direccion-select" class="form-select">
+                        <option value="">Seleccione una direccion</option>
+                        {% for direccion in direccion_listado %}
+                        <option value="{{ direccion.id }}" {% if usuario_data.direccion.id == direccion.id %} selected {% endif %}>{{ direccion }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="departamento-field" class="dynamic-field form-group" style="grid-column: 1 / -1;">
+                    <label for="departamento-select" class="form-label">Departamento específico:</label>
+                    <select name="departamento_especifica" id="departamento-select" class="form-select">
+                        <option value="">Seleccione una Departamento</option>
+                        {% for departamento in departamento_listado %}
+                        <option value="{{ departamento.id }}" {% if usuario_data.departamento.id == departamento.id %} selected {% endif %}>{{ departamento }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="action-buttons-footer">
+                    <a href="{% url 'main_usuario' %}" class="btn btn-secondary">Volver</a>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color); }
+    .form-control,
+    .form-select { width: 100%; padding: 0.75rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 0.3rem; background-color: #FFFFFF; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .form-control:focus,
+    .form-select:focus { outline: none; border-color: var(--color-principal); box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2); }
+    .dynamic-field { display: none; }
+    .action-buttons-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; }
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background-color: var(--color-principal); color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const perfilSelect = document.getElementById('perfil-select');
+        const direccionField = document.getElementById('direccion-field');
+        const departamentoField = document.getElementById('departamento-field');
+        const direccionSelect = document.getElementById('direccion-select');
+        const departamentoSelect = document.getElementById('departamento-select');
+        
+        function updateFields() {
+            direccionField.style.display = 'none';
+            direccionSelect.required = false;
+            departamentoField.style.display = 'none';
+            departamentoSelect.required = false;
+            
+            const selectedValue = perfilSelect.value;
+            
+            if (selectedValue === '2') { // ID Perfil DIRECCION
+                direccionField.style.display = 'block';
+                direccionSelect.required = true;
+            } 
+            else if (selectedValue === '3') { // ID Perfil DEPARTAMENTO
+                departamentoField.style.display = 'block';
+                departamentoSelect.required = true;
+            }
+        }
+        
+        perfilSelect.addEventListener('change', updateFields);
+        updateFields(); // Ejecutar al cargar
+    });
+</script>
+{% endblock %}

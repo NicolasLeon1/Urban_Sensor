@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+{% block sidebar_content %}
+
+<li>
+
+    <a href="#" class="selected">
+
+        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+
+        <span>Dashboard</span>
+
+    </a>
+
+</li>
+
+<li>
+
+    <a href="{% url 'main_usuario' %}">
+
+        <img src="{% static 'icons/users.svg' %}" alt="">
+
+        <span>Gestión de Usuarios</span>
+
+    </a>
+
+</li>
+
+<li>
+
+    <a href="{% url 'main_encuesta' %}">
+
+        <img src="{% static 'icons/survey.svg' %}" alt="">
+
+        <span>Módulo Encuesta</span>
+
+    </a>
+
+</li>
+
+<li>
+
+    <a href="{% url 'main_direccion' %}">
+
+        <img src="{% static 'icons/location.svg' %}" alt="">
+
+        <span>Módulo Dirección</span>
+
+    </a>
+
+</li>
+
+<li>
+
+    <a href="{% url 'main_departamento' %}">
+
+        <img src="{% static 'icons/department.svg' %}" alt="">
+
+        <span>Módulo Departamento</span>
+
+    </a>
+
+</li>
+
+<li>
+
+    <a href="{% url 'main_incidencia' %}">
+
+        <img src="{% static 'icons/bell.svg' %}" alt="">
+
+        <span>Módulo Incidencia</span>
+
+    </a>
+
+</li>
+
+<li class="separator"></li>
+
+<li>
+
+    <a href="{% url 'logout' %}">
+
+        <img src="{% static 'icons/logout.svg' %}" alt="">
+
+        <span>Cerrar Sesión</span>
+
+    </a>
+
+</li>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+    <h1>Panel Principal</h1>
+
+    <div class="dashboard-cards">
+
+        <div class="card">
+
+            <h2>Resumen del Sistema</h2>
+
+            <p>Bienvenido al panel de administración de la Municipalidad de Puente Alto.</p>
+
+            <p>Utilice el menú lateral para navegar entre las diferentes secciones del sistema.</p>
+
+        </div>
+
+        <div class="card">
+
+            <h2>Accesos Rápidos</h2>
+
+            <div class="quick-links">
+
+                <a href="{% url 'main_usuario' %}" class="quick-link">
+
+                    <img src="{% static 'icons/users.svg' %}" alt="">
+
+                    <span>Usuarios</span>
+
+                </a>
+
+                <a href="{% url 'main_encuesta' %}" class="quick-link">
+
+                    <img src="{% static 'icons/survey.svg' %}" alt="">
+
+                    <span>Encuestas</span>
+
+                </a>
+
+                <a href="{% url 'main_direccion' %}" class="quick-link">
+
+                    <img src="{% static 'icons/location.svg' %}" alt="">
+
+                    <span>Direcciones</span>
+
+                </a>
+
+                <a href="{% url 'main_departamento' %}" class="quick-link">
+
+                    <img src="{% static 'icons/department.svg' %}" alt="">
+
+                    <span>Departamentos</span>
+
+                </a>
+
+                <a href="{% url 'main_incidencia' %}" class="quick-link">
+
+                    <img src="{% static 'icons/bell.svg' %}" alt="">
+
+                    <span>Incidencias</span>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+
+
+{% block extra_css %}
+
+<style>
+
+    .dashboard-cards {
+
+        display: grid;
+
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+        gap: 1.5rem;
+
+        margin-top: 1.5rem;
+
+    }
+
+   
+
+    .card {
+
+        background: white;
+
+        border-radius: 0.5rem;
+
+        padding: 1.5rem;
+
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        border: 1px solid var(--border-color);
+
+    }
+
+   
+
+    .card h2 {
+
+        color: var(--text-title-color);
+
+        margin-bottom: 1rem;
+
+        font-size: 1.25rem;
+
+    }
+
+   
+
+    .card p {
+
+        margin-bottom: 0.75rem;
+
+        line-height: 1.5;
+
+    }
+
+   
+
+    .quick-links {
+
+        display: grid;
+
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 1rem;
+
+    }
+
+   
+
+    .quick-link {
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        justify-content: center;
+
+        padding: 1rem;
+
+        background-color: var(--fondo-general);
+
+        border-radius: 0.5rem;
+
+        text-decoration: none;
+
+        color: var(--text-color);
+
+        transition: all 0.2s ease;
+
+        border: 1px solid var(--border-color);
+
+    }
+
+   
+
+    .quick-link:hover {
+
+        background-color: var(--background-hover);
+
+        transform: translateY(-2px);
+
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    }
+
+   
+
+    .quick-link img {
+
+        width: 2rem;
+
+        margin-bottom: 0.5rem;
+
+    }
+
+   
+
+    .quick-link span {
+
+        font-weight: 500;
+
+        text-align: center;
+
+    }
+
+   
+
+    .separator {
+
+        height: 1px;
+
+        background-color: var(--border-color);
+
+        margin: 0.5rem 0.7rem;
+
+    }
+
+</style>
+
+{% endblock %}

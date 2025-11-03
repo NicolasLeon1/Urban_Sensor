@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Editar Incidencia: {{ incidencia_data.nombre_incidencia }}</h1>
+
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="POST">
+  {% csrf_token %}
+  <input type="hidden" name="id_incidencia" value="{{ incidencia_data.id }}">
+
+  <div class="mb-3">
+    <label for="nombre_incidencia" class="form-label">Nombre Incidencia</label>
+    <input type="text" class="form-control" id="nombre_incidencia" name="nombre_incidencia" value="{{ incidencia_data.nombre_incidencia }}" required>
+  </div>
+  
+  <div class="mb-3">
+    <label for="id_direccion" class="form-label">Dirección</label>
+    <select name="id_direccion" id="id_direccion" class="form-select" required>
+      {% for direccion in direcciones %}
+        <option value="{{ direccion.id_direccion }}" {% if direccion.id_direccion == incidencia_data.id_direccion.id_direccion %}selected{% endif %}>{{ direccion.nombre_direccion }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <div class="mb-3">
+    <label for="id_departamento" class="form-label">Departamento</label>
+    <select name="id_departamento" id="id_departamento" class="form-select" required>
+      {% for departamento in departamentos %}
+        <option value="{{ departamento.id_departamento }}" {% if departamento.id_departamento == incidencia_data.id_departamento.id_departamento %}selected{% endif %}>{{ departamento.nombre_departamento }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <button type="submit" class="btn btn-success">Actualizar</button>
+  <a href="{% url 'main_incidencia' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

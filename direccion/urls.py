@@ -2,9 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('main/', views.main_direccion, name='main_direccion'),
-    path('actualiza/<int:id_direccion>/', views.direccion_actualiza, name='direccion_actualiza'),
-    path('bloquea_activa/<int:id_direccion>/', views.direccion_bloquea_activa, name='direccion_bloquea_activa'),
-    path('main_bloqueadas/', views.main_direccion_bloqueadas, name='main_direccion_bloqueadas'),
-    path('desbloquea/<int:id_direccion>/', views.direccion_desbloqueadas, name='direccion_desbloquea'),
+    path('main_direccion/', views.main_direccion, name='main_direccion'),
+    path('nueva_direccion/', views.nueva_direccion, name='nueva_direccion'),
+    path('ver_direccion/<int:id>', views.ver_direccion, name='ver_direccion'),
+    path('editar_direccion/<int:id>/', views.editar_direccion, name='editar_direccion'),
+    path('toggle_direccion/<int:id>/', views.toggle_direccion, name='toggle_direccion'),
+    path('eliminar_direccion/<int:id>/', views.eliminar_direccion, name='eliminar_direccion'),
 ]
