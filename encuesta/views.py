@@ -6,6 +6,13 @@ from register.models import Profile
 from .models import Encuesta, Pregunta
 from departamento.models import Departamento
 from incidencia.models import TipoIncidencia 
+
+# --- IMPORTS AÑADIDOS ---
+from register.decorators import territorial_required
+# Usar la importación de string para romper el ciclo en las VISTAS también es una buena práctica
+from incidencia.models import SolicitudIncidencia, RespuestaSolicitud 
+from django.db import transaction # Para asegurar que la solicitud y sus respuestas se creen juntas
+
 @secpla_required
 def main_encuesta(request):
     encuesta_listado = Encuesta.objects.order_by('-creado')
@@ -51,7 +58,6 @@ def nueva_encuesta(request):
     else:
         departamentos = Departamento.objects.filter(activo=True)
         tipo_incidencias = TipoIncidencia.objects.filter(activo=True)
-        tipos_incidencia = TipoIncidencia.objects.filter(activo=True)
         return render(request, 'encuesta/nueva_encuesta.html', {
             'departamentos': departamentos,
             'tipo_incidencias': tipo_incidencias,
@@ -171,3 +177,93 @@ def eliminar_encuesta(request, id):
     except Encuesta.DoesNotExist:
         messages.error(request, 'La encuesta no existe')
         return redirect('main_encuesta')
+
+# --- NUEVAS VISTAS PARA PERFIL TERRITORIAL ---
+
+@territorial_required
+def listar_encuestas_responder(request):
+    """
+    Muestra al usuario Territorial la lista de Encuestas (plantillas)
+    activas que puede utilizar para crear una nueva Solicitud de Incidencia.
+    (Requerimiento: Territorial ... eligiendo la encuesta adecuada)
+    """
+    encuestas_activas = Encuesta.objects.filter(activo=True).select_related(
+        'id_tipo_incidencia', 
+        'id_departamento'
+    ).order_by('titulo_encuesta')
+    
+    return render(request, 'encuesta/listar_encuestas_responder.html', {
+        'encuestas_listado': encuestas_activas
+    })
+
+@territorial_required
+@transaction.atomic # Si falla el guardado de una respuesta, se anula la solicitud
+def responder_encuesta(request, id_encuesta):
+    """
+    Permite al usuario Territorial rellenar las preguntas de una Encuesta
+    para crear una nueva SolicitudIncidencia.
+    (Requerimiento: Territorial ... crea incidencias)
+    """
+    try:
+        # Optimizar consulta cargando preguntas relacionadas
+        encuesta = Encuesta.objects.prefetch_related('pregunta_set').get(pk=id_encuesta, activo=True)
+    except Encuesta.DoesNotExist:
+        messages.error(request, 'La encuesta seleccionada no existe o no está activa.')
+        return redirect('listar_encuestas_responder')
+
+    if request.method == 'POST':
+        try:
+            # 1. Crear la SolicitudIncidencia (el "ticket")
+            tipo_incidencia = encuesta.id_tipo_incidencia
+            
+            solicitud = SolicitudIncidencia.objects.create(
+                encuesta_base=encuesta,
+                creado_por=request.user, # request.user es inyectado por @territorial_required
+                estado='abierta',
+                # Se copia la asignación desde la plantilla de encuesta
+                direccion_asignada=tipo_incidencia.id_direccion,
+                departamento_asignado=tipo_incidencia.id_departamento
+            )
+            
+            # 2. Recorrer las preguntas de la plantilla y guardar las respuestas
+            preguntas = encuesta.pregunta_set.all()
+            respuestas_a_crear = []
+            
+            for pregunta in preguntas:
+                # El 'name' del input en el HTML debe ser "pregunta_[id_pregunta]"
+                respuesta_texto = request.POST.get(f'pregunta_{pregunta.id}')
+                
+                if not respuesta_texto or not respuesta_texto.strip():
+                    # Validación simple: asumimos que todas las preguntas son obligatorias
+                    raise ValueError(f"La pregunta '{pregunta.texto_pregunta}' es obligatoria.")
+                
+                respuestas_a_crear.append(
+                    RespuestaSolicitud(
+                        solicitud=solicitud,
+                        pregunta=pregunta,
+                        respuesta_texto=respuesta_texto.strip()
+                    )
+                )
+            
+            # 3. Guardar todas las respuestas en la base de datos
+            RespuestaSolicitud.objects.bulk_create(respuestas_a_crear)
+            
+            messages.success(request, f'Incidencia "{encuesta.titulo_encuesta}" creada correctamente.')
+            # Redirigir al dashboard del territorial para ver su nueva incidencia
+            return redirect('dashboard_territorial') 
+
+        except ValueError as e:
+            messages.error(request, str(e))
+            # Si hay un error (ej. pregunta vacía), volver a la misma página
+            return redirect('responder_encuesta', id_encuesta=id_encuesta)
+        except Exception as e:
+            messages.error(request, f'Error al guardar la incidencia: {str(e)}')
+            return redirect('responder_encuesta', id_encuesta=id_encuesta)
+
+    else:
+        # Método GET: Mostrar el formulario con las preguntas
+        preguntas = encuesta.pregunta_set.all()
+        return render(request, 'encuesta/responder_encuesta.html', {
+            'encuesta_data': encuesta,
+            'preguntas': preguntas
+        })
