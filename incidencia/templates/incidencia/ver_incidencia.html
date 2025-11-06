@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Detalles de Incidencia</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Nombre Incidencia:</span>
+                    <span class="detail-value">{{ incidencia_data.nombre_incidencia }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Dirección:</span>
+                    <span class="detail-value">{{ incidencia_data.id_direccion.nombre_direccion }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Departamento:</span>
+                    <span class="detail-value">{{ incidencia_data.id_departamento.nombre_departamento }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Estado:</span>
+                    <span class="detail-value">
+                        {% if incidencia_data.activo %}
+                            <span class="badge badge-success">Activo</span>
+                        {% else %}
+                            <span class="badge badge-danger">Bloqueado</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons-footer">
+        <a href="{% url 'main_incidencia' %}" class="btn btn-secondary">Volver al Listado</a>
+        <a href="{% url 'editar_incidencia' incidencia_data.id %}" class="btn btn-warning">Editar</a>
+    </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; max-width: 700px; }
+    
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .detail-item { display: flex; flex-direction: column; }
+    .detail-label { font-size: 0.9rem; font-weight: 500; color: #888; margin-bottom: 0.25rem; }
+    .detail-value { font-size: 1.1rem; color: var(--text-color); }
+
+    /* Botones */
+    .action-buttons-footer { margin-top: 1.5rem; display: flex; gap: 0.75rem; }
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-warning { background-color: var(--advertencia); color: var(--texto-principal); }
+
+    /* Badges de Estado */
+    .badge { display: inline-block; padding: 0.3em 0.6em; font-size: 0.85rem; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 10rem; }
+    .badge-success { color: #fff; background-color: var(--completado); }
+    .badge-danger { color: #fff; background-color: var(--error); }
+</style>
+{% endblock %}
