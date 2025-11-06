@@ -52,14 +52,14 @@
                     <select name="direccion_especifica" id="direccion-select" class="form-select">
                         <option value="">Seleccione una direccion</option>
                         {% for direccion in direccion_listado %}
-                        <option value="{{ direccion.id }}">{{ direccion }}</option>
+                        <option value="{{ direccion.id_direccion }}">{{ direccion }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div id="departamento-field" class="dynamic-field form-group" style="grid-column: 1 / -1;">
                     <label for="departamento-select" class="form-label">Departamento específico:</label>
-                    <select name="departamento_especifica" id="departamento-select" class="form-select">
+                    <select name="departamento_especifico" id="departamento-select" class="form-select">
                         <option value="">Seleccione una Departamento</option>
                         {% for departamento in departamento_listado %}
                         <option value="{{ departamento.id }}">{{ departamento }}</option>
@@ -176,7 +176,7 @@
                 direccionSelect.required = true;
             } 
             // Perfil "DEPARTAMENTO" (ID 3)
-            else if (selectedValue === '3') { 
+            else if (selectedValue === '3' || selectedValue === '5') { 
                 departamentoField.style.display = 'block';
                 departamentoSelect.required = true;
             }

@@ -32,6 +32,8 @@ class SolicitudIncidencia(models.Model):
     # --- CAMBIO AQUÍ: Se usa el string 'encuesta.Encuesta' ---
     encuesta_base = models.ForeignKey("encuesta.Encuesta", on_delete=models.PROTECT, related_name='solicitudes')
     
+    ubicacion = models.CharField()
+
     # Quien la crea (Perfil Territorial)
     creado_por = models.ForeignKey(User, on_delete=models.PROTECT, related_name='solicitudes_creadas')
     

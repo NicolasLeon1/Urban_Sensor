@@ -26,6 +26,20 @@
             {% csrf_token %}
             
             <div class="card-body">
+
+                <div class="form-group">
+                    <label for="ubicacion">
+                        Ubicación del incidente
+                    </label>
+                    <input 
+                        type="text" 
+                        name="ubicacion" 
+                        id="ubicacion" 
+                        class="form-control"
+                        placeholder="Ingrese la dirección o ubicación del incidente"
+                        required
+                    >
+                </div>
                 
                 {% for pregunta in preguntas %}
                     <div class="form-group">

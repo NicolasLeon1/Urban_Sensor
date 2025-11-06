@@ -8,21 +8,21 @@ class Command(BaseCommand):
         parser.add_argument(
             '--force', '-f',
             action='store_true',
-            help='Forzar la creación incluso si ya existe el usuario'
+            help='Forzar la creación incluso si ya existen usuarios'
         )
 
     def handle(self, *args, **options):
         force = options['force']
         
-        if User.objects.filter(username='admin').exists():
+        if User.objects.exists():
             if not force:
                 self.stdout.write(
-                    self.style.WARNING('El usuario admin ya existe. Usa --force para recrearlo. (Precaucion: usar --force borrara todos los usuarios creados.)')
+                    self.style.WARNING('Ya existen usuarios en el sistema. Usa --force para recrearlos. (Precaucion: usar --force borrara todos los usuarios existentes.)')
                 )
                 return
             else:
-                User.objects.filter(username='admin').delete()
-                self.stdout.write('Usuario admin existente eliminado.')
+                User.objects.all().delete()
+                self.stdout.write('Todos los usuarios existentes han sido eliminados.')
 
         if not Profile.objects.exists():
             self.stdout.write(
@@ -31,23 +31,89 @@ class Command(BaseCommand):
             return
 
         perfil_secpla = Profile.objects.get(nombre_perfil='SECPLA')
+        perfil_departamento = Profile.objects.get(nombre_perfil='Departamento')
+        perfil_direccion = Profile.objects.get(nombre_perfil='Direccion')
+        perfil_territorial = Profile.objects.get(nombre_perfil='Territorial')
+        perfil_cuadrilla = Profile.objects.get(nombre_perfil='Cuadrilla')
 
-        user = User(
+        secpla = User(
             nombre='Administrador',
-            apellido='Secpla', 
+            apellido='Secpla',
             username='admin',
             email='secpla@municipalidad.cl',
             telefono='912345678',
             perfil=perfil_secpla,
-            first_session=True
+            first_session=False
         )
 
-        user.set_password('admin')
-        user.save()
+        departamento = User(
+            nombre='Departamento',
+            apellido='Departamento',
+            username='depto',
+            email='departamento@municipalidad.cl',
+            telefono='912345678',
+            perfil=perfil_departamento,
+            first_session=False
+        )
+
+        direccion = User(
+            nombre='Direccion',
+            apellido='Direccion',
+            username='dir',
+            email='direccion@municipalidad.cl',
+            telefono='912345678',
+            perfil=perfil_direccion,
+            first_session=False
+        )
+
+        territorial = User(
+            nombre='Territorial',
+            apellido='Territorial',
+            username='ter',
+            email='territorial@municipalidad.cl',
+            telefono='912345678',
+            perfil=perfil_territorial,
+            first_session=False
+        )
+
+        cuadrilla = User(
+            nombre='Cuadrilla',
+            apellido='Cuadrilla',
+            username='cuad',
+            email='cuadrilla@municipalidad.cl',
+            telefono='912345678',
+            perfil=perfil_cuadrilla,
+            first_session=False
+        )
+
+        secpla.set_password('admin')
+        departamento.set_password('depto')
+        direccion.set_password('dir')
+        territorial.set_password('ter')
+        cuadrilla.set_password('cuad')
+
+        secpla.save()
+        departamento.save()
+        direccion.save()
+        territorial.save()
+        cuadrilla.save()
 
         self.stdout.write(
-            self.style.SUCCESS('Usuario Secpla creado exitosamente')
+            self.style.SUCCESS('Usuarios creados exitosamente')
         )
-        self.stdout.write('Usuario: admin')
-        self.stdout.write('Contraseña: admin')
-        self.stdout.write('Cambia la contraseña en el primer inicio de sesión')
+        self.stdout.write('=== Credenciales por perfil ===')
+        self.stdout.write('SECPLA:')
+        self.stdout.write('  Usuario: admin')
+        self.stdout.write('  Contraseña: admin')
+        self.stdout.write('Departamento:')
+        self.stdout.write('  Usuario: depto')
+        self.stdout.write('  Contraseña: depto')
+        self.stdout.write('Direccion:')
+        self.stdout.write('  Usuario: dir')
+        self.stdout.write('  Contraseña: dir')
+        self.stdout.write('Territorial:')
+        self.stdout.write('  Usuario: ter')
+        self.stdout.write('  Contraseña: ter')
+        self.stdout.write('Cuadrilla:')
+        self.stdout.write('  Usuario: cuad')
+        self.stdout.write('  Contraseña: cuad')

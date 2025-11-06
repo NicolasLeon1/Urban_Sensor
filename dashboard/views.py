@@ -51,10 +51,18 @@ def dashboard_departamento(request):
     # Requerimiento: Puede derivar una incidencia a una cuadrilla
     # Filtramos las que están 'abiertas' para que el depto las derive
     solicitudes_pendientes = solicitudes_depto.filter(estado='abierta')
+    solicitudes_derivadas = solicitudes_depto.filter(estado='derivada')
+    solicitudes_finalizadas = solicitudes_depto.filter(estado='finalizada')
+
+    cuadrillas = User.objects.filter(perfil=Perfiles.CUADRILLA.value)
     
     context = {
         'solicitudes_listado': solicitudes_depto,
         'solicitudes_pendientes': solicitudes_pendientes,
+        'conteo_abiertas': solicitudes_pendientes.count(),
+        'conteo_derivadas': solicitudes_derivadas.count(),
+        'conteo_finalizadas': solicitudes_finalizadas.count(),
+        'cuadrillas_departamento': cuadrillas
     }
     return render(request, 'dashboard/dashboard_departamento.html', context)
 
@@ -66,8 +74,15 @@ def dashboard_direccion(request):
         direccion_asignada=request.user.direccion
     ).order_by('estado', '-actualizado')
     
+    solicitudes_pendientes = solicitudes_dir.filter(estado='abierta')
+    solicitudes_derivadas = solicitudes_dir.filter(estado='derivada')
+    solicitudes_finalizadas = solicitudes_dir.filter(estado='finalizada')
+
     context = {
-        'solicitudes_listado': solicitudes_dir
+        'solicitudes_listado': solicitudes_dir,
+        'conteo_abiertas': solicitudes_pendientes.count(),
+        'conteo_derivadas': solicitudes_derivadas.count(),
+        'conteo_finalizadas': solicitudes_finalizadas.count()
     }
     return render(request, 'dashboard/dashboard_direccion.html', context)
 

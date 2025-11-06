@@ -106,15 +106,28 @@ def editar_encuesta(request, id):
             encuesta.id_tipo_incidencia_id = id_tipo_incidencia
             encuesta.save()
             
-            preguntas_eliminadas = request.POST.getlist('preguntas_eliminadas[]')
-            for pregunta_id, valor in zip(request.POST.getlist('preguntas_existentes[]'), preguntas_eliminadas):
-                if valor == '1':
-                    try:
-                        pregunta = Pregunta.objects.get(pk=pregunta_id.split('[')[1].split(']')[0])
-                        pregunta.delete()
-                    except (Pregunta.DoesNotExist, IndexError):
-                        pass
-
+            preguntas_a_eliminar = request.POST.getlist('eliminar_preguntas')
+            
+            for pregunta_id in preguntas_a_eliminar:
+                try:
+                    pregunta = Pregunta.objects.get(pk=pregunta_id, id_encuesta=encuesta)
+                    pregunta.delete()
+                except Pregunta.DoesNotExist:
+                    pass
+            
+            for key, texto_pregunta in request.POST.items():
+                if key.startswith('preguntas_existentes['):
+                    pregunta_id = key.split('[')[1].split(']')[0]
+                    texto_limpio = texto_pregunta.strip()
+                    
+                    if pregunta_id not in preguntas_a_eliminar and texto_limpio:
+                        try:
+                            pregunta = Pregunta.objects.get(pk=pregunta_id, id_encuesta=encuesta)
+                            pregunta.texto_pregunta = texto_limpio
+                            pregunta.save()
+                        except Pregunta.DoesNotExist:
+                            pass
+            
             preguntas_nuevas = request.POST.getlist('preguntas_nuevas[]')
             for texto_pregunta in preguntas_nuevas:
                 texto_limpio = texto_pregunta.strip()
@@ -140,7 +153,7 @@ def editar_encuesta(request, id):
             
             return render(request, 'encuesta/editar_encuesta.html', {
                 'encuesta_data': encuesta_data,
-                'preguntas': preguntas,
+                'preguntas_existentes': preguntas,
                 'departamentos': departamentos,
                 'tipo_incidencias': tipo_incidencias,
                 'prioridades': Encuesta.PRIORIDADES
@@ -215,12 +228,15 @@ def responder_encuesta(request, id_encuesta):
         try:
             # 1. Crear la SolicitudIncidencia (el "ticket")
             tipo_incidencia = encuesta.id_tipo_incidencia
+
+            ubicacion = request.POST.get('ubicacion')
             
             solicitud = SolicitudIncidencia.objects.create(
                 encuesta_base=encuesta,
                 creado_por=request.user, # request.user es inyectado por @territorial_required
                 estado='abierta',
                 # Se copia la asignación desde la plantilla de encuesta
+                ubicacion=ubicacion,
                 direccion_asignada=tipo_incidencia.id_direccion,
                 departamento_asignado=tipo_incidencia.id_departamento
             )

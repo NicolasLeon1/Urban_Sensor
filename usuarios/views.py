@@ -54,7 +54,7 @@ def nuevo_usuario(request):
                 telefono=telefono,
                 perfil=perfil
             )
-            if perfil_seleccionado == Perfiles.DEPARTAMENTO:
+            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value:
                 departamento_id = request.POST.get('departamento_especifico')
                 try:
                     departamento = Departamento.objects.filter(activo=True).get(pk=departamento_id)
@@ -62,7 +62,7 @@ def nuevo_usuario(request):
                 except Departamento.DoesNotExist:
                     messages.error(request, 'Departamento no existe')
                     return redirect('nuevo_usuario')
-            elif perfil_seleccionado == Perfiles.DIRECCION:
+            elif int(perfil_seleccionado) == Perfiles.DIRECCION.value:
                 direccion_id = request.POST.get('direccion_especifica')
                 try:
                     direccion = Direccion.objects.filter(activo=True).get(pk=direccion_id)
@@ -135,7 +135,7 @@ def editar_usuario(request, id):
             user.email = email
             user.telefono = telefono
             user.perfil = perfil
-            if perfil_seleccionado == Perfiles.DEPARTAMENTO:
+            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value:
                 departamento_id = request.POST.get('departamento_especifico')
                 try:
                     departamento = Departamento.objects.filter(activo=True).get(pk=departamento_id)
@@ -143,7 +143,7 @@ def editar_usuario(request, id):
                 except Departamento.DoesNotExist:
                     messages.error(request, 'Departamento no existe')
                     return redirect('editar_usuario', id)
-            elif perfil_seleccionado == Perfiles.DIRECCION:
+            elif int(perfil_seleccionado) == Perfiles.DIRECCION.value:
                 direccion_id = request.POST.get('direccion_especifica')
                 try:
                     direccion = Direccion.objects.filter(activo=True).get(pk=direccion_id)
@@ -151,7 +151,6 @@ def editar_usuario(request, id):
                 except Direccion.DoesNotExist:
                     messages.error(request, 'Departamento no existe')
                     return redirect('editar_usuario', id)
-            user.set_password('zzz')
             user.save()
             messages.success(request, 'Usuario creado correctamente')
             return redirect('main_usuario')

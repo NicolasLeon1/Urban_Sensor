@@ -44,12 +44,16 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="tipo-incidencia-field">
                         <label for="id_tipo_incidencia" class="form-label">Tipo Incidencia:</label>
                         <select name="id_tipo_incidencia" id="id_tipo_incidencia" class="form-select" required>
                             <option value="">Seleccione tipo de incidencia</option>
                             {% for tipo in tipo_incidencias %}
-                            <option value="{{ tipo.id }}" {% if encuesta_data.id_tipo_incidencia.id == tipo.id %}selected{% endif %}>{{ tipo.nombre_incidencia }}</option>
+                            <option value="{{ tipo.id }}" 
+                                    data-departamento="{{ tipo.id_departamento.id }}"
+                                    {% if encuesta_data.id_tipo_incidencia.id == tipo.id %}selected{% endif %}>
+                                {{ tipo.nombre_incidencia }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -68,7 +72,7 @@
                     <div class="pregunta-existente-item">
                         <input type="text" name="preguntas_existentes[{{ pregunta.id }}]" class="form-control" value="{{ pregunta.texto_pregunta }}">
                         <div class="form-check">
-                            <input type="checkbox" name="eliminar_preguntas[]" value="{{ pregunta.id }}" id="eliminar_{{ pregunta.id }}" class="form-check-input">
+                            <input type="checkbox" name="eliminar_preguntas" value="{{ pregunta.id }}" id="eliminar_{{ pregunta.id }}" class="form-check-input">
                             <label for="eliminar_{{ pregunta.id }}" class="form-check-label">Eliminar</label>
                         </div>
                     </div>
@@ -156,6 +160,49 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Lógica para FILTRO DE INCIDENCIAS POR DEPARTAMENTO
+    const departamentoSelect = document.getElementById('id_departamento');
+    const tipoIncidenciaField = document.getElementById('tipo-incidencia-field');
+    const tipoIncidenciaSelect = document.getElementById('id_tipo_incidencia');
+    const tipoIncidenciaOptions = tipoIncidenciaSelect.querySelectorAll('option[data-departamento]');
+    
+    // Guardar el tipo de incidencia seleccionado actualmente
+    const tipoIncidenciaSeleccionado = tipoIncidenciaSelect.value;
+    
+    function actualizarIncidencias() {
+        const departamentoId = departamentoSelect.value;
+        
+        if (departamentoId) {
+            // Mostrar el campo de tipo de incidencia
+            tipoIncidenciaField.style.display = 'block';
+            
+            // Mostrar solo las incidencias del departamento seleccionado
+            tipoIncidenciaOptions.forEach(option => {
+                if (option.getAttribute('data-departamento') === departamentoId) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            // Verificar si el tipo de incidencia actualmente seleccionado pertenece al nuevo departamento
+            const opcionSeleccionada = tipoIncidenciaSelect.querySelector(`option[value="${tipoIncidenciaSeleccionado}"]`);
+            if (opcionSeleccionada && opcionSeleccionada.getAttribute('data-departamento') !== departamentoId) {
+                // Si no pertenece, limpiar la selección
+                tipoIncidenciaSelect.value = '';
+            }
+        } else {
+            // Si no hay departamento seleccionado, ocultar el campo de tipo de incidencia
+            tipoIncidenciaField.style.display = 'none';
+            tipoIncidenciaSelect.value = '';
+        }
+    }
+    
+    departamentoSelect.addEventListener('change', actualizarIncidencias);
+    
+    // Ejecutar al cargar la página para aplicar el filtro inicial
+    actualizarIncidencias();
+
     // Lógica para NUEVAS preguntas
     const btnAgregarNueva = document.getElementById('btn-agregar-nueva');
     const containerNuevas = document.getElementById('preguntas-nuevas-container');

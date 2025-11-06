@@ -1,4 +1,4 @@
-% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block sidebar_content %}
@@ -25,8 +25,8 @@
 
 {% block content %}
     <h1 style="color: var(--color-principal);">Panel de Dirección</h1>
-    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user.profile.nombre }} {{ user.profile.apellido }}.</p>
-    <p style="font-size: 1.1rem; color: var(--text-color);">Dirección Asignada: <strong>{{ user.profile.direccion_asignada.nombre_direccion }}</strong></p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user.nombre }} {{ user.apellido }}.</p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Dirección Asignada: <strong>{{ user.direccion }}</strong></p>
 
     <!-- Estadísticas (Requerimiento: "organizadas por estado") -->
     <div class="dashboard-stats">
@@ -67,11 +67,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for reporte in incidencias_direccion %}
+                    {% for reporte in solicitudes_listado %}
                     <tr>
                         <td>#{{ reporte.id }}</td>
-                        <td>{{ reporte.encuesta_plantilla.titulo_encuesta }}</td>
-                        <td>{{ reporte.departamento.nombre_departamento }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.departamento_asignado }}</td>
                         <td>
                             {% if reporte.estado == 'abierta' %}
                                 <span class="badge badge-info">Abierta</span>
@@ -92,7 +92,7 @@
                                 <span class="badge badge-secondary">Baja</span>
                             {% endif %}
                         </td>
-                        <td>{{ reporte.fecha_creacion|date:"d/m/Y" }}</td>
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
                         <td>
                             <a href="#" class="btn btn-sm btn-info">Ver Detalles</a> <!-- Deberás crear esta vista -->
                         </td>

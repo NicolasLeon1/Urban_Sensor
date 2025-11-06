@@ -43,23 +43,6 @@ def first_session(request):
             for error in errors:
                 messages.error(request, error)
             return redirect('first_session')
-        perfil = user.perfil.id
-        if perfil == Perfiles.DEPARTAMENTO.value:
-            departamento_id = request.POST.get('departamento_id')
-            try:
-                departamento = Departamento.objects.filter(activo=True).get(pk=departamento_id)
-                user.departamento = departamento
-            except Departamento.DoesNotExist:
-                messages.error(request, 'Departamento no existe')
-                return redirect('first_session')
-        elif perfil == Perfiles.DIRECCION.value:
-            direccion_id = request.POST.get('direccion_id')
-            try:
-                direccion = Direccion.objects.filter(activo=True).get(pk=direccion_id)
-                user.direccion = direccion
-            except Direccion.DoesNotExist:
-                messages.error(request, 'Departamento no existe')
-                return redirect('first_session')
         user.nombre = nombre
         user.apellido = apellido
         user.username = username

@@ -25,8 +25,8 @@
 
 {% block content %}
     <h1 style="color: var(--color-principal);">Panel de Departamento</h1>
-    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user.profile.nombre }} {{ user.profile.apellido }}.</p>
-    <p style="font-size: 1.1rem; color: var(--text-color);">Departamento Asignado: <strong>{{ user.profile.departamento_asignado.nombre_departamento }}</strong></p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user.nombre }} {{ user.apellido }}.</p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Departamento Asignado: <strong>{{ user.departamento }}</strong></p>
 
     <!-- Estadísticas -->
     <div class="dashboard-stats">
@@ -70,10 +70,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for reporte in incidencias_por_asignar %}
+                    {% for reporte in solicitudes_pendientes %}
                     <tr>
                         <td>#{{ reporte.id }}</td>
-                        <td>{{ reporte.encuesta_plantilla.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
                         <td>{{ reporte.ubicacion }}</td>
                         <td>
                             {% if reporte.prioridad == 'alta' %}
@@ -84,16 +84,16 @@
                                 <span class="badge badge-secondary">Baja</span>
                             {% endif %}
                         </td>
-                        <td>{{ reporte.fecha_creacion|date:"d/m/Y" }}</td>
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
                         <td>
                             <!-- Formulario para derivar -->
                             <!-- DEBERÁS CREAR la url 'derivar_incidencia' en la app 'encuesta' o 'reportes' -->
-                            <form action="{% url 'derivar_incidencia' reporte.id %}" method="POST" class="form-derivar">
+                            <form action="" method="POST" class="form-derivar">
                                 {% csrf_token %}
                                 <select name="cuadrilla_id" class="form-select-sm" required>
                                     <option value="">Seleccionar cuadrilla...</option>
                                     {% for cuadrilla in cuadrillas_departamento %}
-                                        <option value="{{ cuadrilla.id }}">{{ cuadrilla.nombre_cuadrilla }}</option>
+                                        <option value="{{ cuadrilla.id }}">{{ cuadrilla.nombre }}</option>
                                     {% endfor %}
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-primary">Derivar</button>
