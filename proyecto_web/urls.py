@@ -22,10 +22,12 @@ from django.urls import path, include
 urlpatterns = [
     path('', include('core.urls')),
     path('encuesta/', include('encuesta.urls')),
-    path('accounts/', include('registration.urls')),
+    path('accounts/', include('register.urls')),
     path('user/', include('usuarios.urls')),
     path('admin/', admin.site.urls),
-    path('direcciones/', include('direccion.urls')),
+    path('direccion/', include('direccion.urls')),
+    path('incidencia/', include('incidencia.urls')),
     path('encuesta/', include('encuesta.urls')),
     path('departamento/', include('departamento.urls')),
+    path('dashboard/', include('dashboard.urls')),
 ]

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    
+    <h1 style="color: var(--color-principal);">{{ encuesta_data.titulo_encuesta }}</h1>
+    <p style="margin-top: -0.5rem; margin-bottom: 1rem; color: #6c757d; font-size: 1.1rem;">
+        {{ encuesta_data.descripcion_incidente }}
+    </G>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2>2. Complete la información</h2>
+            <p>Responda todas las preguntas para crear la solicitud de incidencia.</p>
+        </div>
+
+        <form method="POST" action="{% url 'responder_encuesta' encuesta_data.id %}">
+            {% csrf_token %}
+            
+            <div class="card-body">
+                
+                {% for pregunta in preguntas %}
+                    <div class="form-group">
+                        <label for="pregunta_{{ pregunta.id }}">
+                            {{ pregunta.texto_pregunta }}
+                        </label>
+                        
+                        <textarea 
+                            name="pregunta_{{ pregunta.id }}" 
+                            id="pregunta_{{ pregunta.id }}" 
+                            rows="4" 
+                            class="form-control"
+                            required
+                        ></textarea>
+                    </div>
+                {% empty %}
+                    <p style="text-align: center; color: #6c757d;">
+                        Esta encuesta no tiene preguntas. Contacte a SECPLA.
+                    </p>
+                {% endfor %}
+
+            </div>
+
+            <div class="card-footer">
+                <a href="{% url 'listar_encuestas_responder' %}" class="btn btn-secondary">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    Crear Incidencia
+                </button>
+            </div>
+
+        </form>
+    </div>
+    
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); }
+    .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+    .card-header h2 { color: var(--color-principal); }
+    .card-header p { color: var(--text-color); margin-top: 0.25rem; }
+    .card-body { padding: 1.5rem; }
+    .card-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        background-color: var(--fondo-general);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 700;
+        color: var(--text-title-color);
+        margin-bottom: 0.5rem;
+        font-size: 1.05rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: var(--text-color);
+        background-color: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 0.3rem;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        box-sizing: border-box; /* Asegura que el padding no afecte el ancho */
+        font-family: inherit; /* Hereda la fuente del body */
+    }
+    .form-control:focus {
+        border-color: var(--color-principal);
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Sombra de foco */
+    }
+
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: var(--color-principal); border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    
+    .btn-primary { background-color: var(--color-principal); }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-secondary:hover { opacity: 0.8; }
+
+    .messages-container { list-style: none; padding: 0; margin: 1rem 0 0 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
+    .message.error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+</style>
+{% endblock %}

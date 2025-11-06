@@ -3,12 +3,9 @@ from . import views
 
 urlpatterns = [
     path('main_usuario/', views.main_usuario, name='main_usuario'),
-    path('usuario_crear/', views.usuario_crear, name='usuario_crear'),
-    path('usuario_guardar/', views.usuario_guardar, name='usuario_guardar'),
-    path('usuario_ver/<int:usuario_id>/', views.usuario_ver, name='usuario_ver'),
-    path('usuario_actualiza/<int:usuario_id>/', views.usuario_actualiza, name='usuario_actualiza'),
-    path('usuario_actualiza/', views.usuario_actualiza, name='usuario_actualiza_post'),
-    path('usuario_bloquea/<int:usuario_id>/', views.usuario_bloquea, name='usuario_bloquea'),
-    path('main_usuario_bloqueado/', views.main_usuario_bloqueado, name='main_usuario_bloqueado'),
-    path('usuario_desbloquea/<int:usuario_id>/', views.usuario_desbloquea, name='usuario_desbloquea'),
+    path('nuevo_usuario/', views.nuevo_usuario, name='nuevo_usuario'),
+    path('editar_usuario/<int:id>', views.editar_usuario, name='editar_usuario'),
+    path('ver_usuario/<int:id>', views.ver_usuario, name='ver_usuario'),
+    path('toggle_usuario/<int:id>', views.toggle_usuario, name='toggle_usuario'),
+    path('eliminar_usuario/<int:id>', views.eliminar_usuario, name='eliminar_usuario'),
 ]

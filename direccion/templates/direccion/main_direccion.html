@@ -1,55 +1,112 @@
-<h1>Actualizar Dirección</h1>
-<hr>
+{% extends 'base.html' %}
+{% load static %}
 
-{% if messages %}
-    <ul>
-        {% for message in messages %}
-            <li style="color:red;">{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
+{% block content %}
+    <h1 style="color: var(--color-principal);">Gestión de Direcciones</h1>
 
-<form method="post">
-    {% csrf_token %}
-    <p>
-        <label for="nombre">Nombre de la Dirección:</label>
-        <input type="text" id="nombre" name="nombre_direccion" value="{{ direccion_data.nombre_direccion }}">
-    </p>
-    <button type="submit">Actualizar</button>
-</form>
-<br>
-<a href="{% url 'main_direccion' %}">Volver a la lista</a>
+    <div class="action-buttons-header">
+        <a href="{% url 'nueva_direccion' %}" class="btn btn-primary">Nueva Dirección</a>
+    </div>
 
-<h1>Gestión de Direcciones (Bloqueadas)</h1>
-<hr>
-<a href="{% url 'main_direccion' %}">Volver a la lista de Activas</a>
-<br><br>
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
-{% if messages %}
-    <ul>
-        {% for message in messages %}
-            <li style="color:green;">{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nombre Dirección</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in direcciones_listado %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ d.nombre_direccion }}</td>
+                    <td>
+                        {% if d.activo %}
+                            <span class="badge badge-success">Activo</span>
+                        {% else %}
+                            <span class="badge badge-danger">Bloqueado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-links">
+                            <a href="{% url 'ver_direccion' d.id_direccion %}" class="btn btn-sm btn-info">Ver</a>
+                            <a href="{% url 'editar_direccion' d.id_direccion %}" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="{% url 'toggle_direccion' d.id_direccion %}" class="btn btn-sm btn-secondary">
+                                {% if d.activo %} Bloquear {% else %} Desbloquear {% endif %}
+                            </a>
+                            <a href="{% url 'eliminar_direccion' d.id_direccion %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">No existen direcciones registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-<table border="1" style="width:100%;">
-    <thead>
-        <tr>
-            <th>Nombre Dirección</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for d in direcciones_listado %}
-        <tr>
-            <td>{{ d.nombre_direccion }}</td>
-            <td>{{ d.estado }}</td>
-            <td>
-                <a href="{% url 'direccion_desbloquea' d.id_direccion %}">Desbloquear</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="action-buttons-footer">
+        <a href="{% url 'dashboard_admin' %}" class="btn btn-secondary">Volver al Panel</a>
+    </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ----- Contenedores de Botones ----- */
+    .action-buttons-header { margin-bottom: 1.5rem; }
+    .action-buttons-footer { margin-top: 1.5rem; }
+
+    /* ----- Estilos de Botones ----- */
+    .btn { display: inline-block; padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background-color: var(--color-principal); color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-info { background-color: #17a2b8; color: white; }
+    .btn-warning { background-color: var(--advertencia); color: var(--texto-principal); }
+    .btn-danger { background-color: var(--error); color: white; }
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+    .action-links a { margin-right: 0.25rem; }
+    .action-links { white-space: nowrap; }
+
+    /* ----- Estilos de Tabla ----- */
+    .table-container { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th,
+    .data-table td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-color); text-align: left; vertical-align: middle; color: var(--text-color); }
+    .data-table th { background-color: var(--fondo-general); font-weight: 700; color: var(--text-title-color); }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover { background-color: #f8f9fa; }
+
+    /* ----- Badges de Estado ----- */
+    .badge { display: inline-block; padding: 0.3em 0.6em; font-size: 0.75rem; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 10rem; }
+    .badge-success { color: #fff; background-color: var(--completado); }
+    .badge-danger { color: #fff; background-color: var(--error); }
+
+    /* ----- Mensajes de Alerta ----- */
+    .messages-container { list-style: none; padding: 0; margin: 0 0 1rem 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.success, .message.info { /* Tu 'success' original era verde */
+        color: #0f5132; background-color: #d1e7dd; border-color: #badbcc;
+    }
+    .message.error {
+        color: #842029; background-color: #f8d7da; border-color: #f5c2c7;
+    }
+    .message.warning {
+        color: #664d03; background-color: #fff3cd; border-color: #ffecb5;
+    }
+</style>
+{% endblock %}
