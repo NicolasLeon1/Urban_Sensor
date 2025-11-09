@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Gestión de Usuarios</h1>
+
+    <div class="action-buttons-header">
+        <a href="{% url 'nuevo_usuario' %}" class="btn btn-primary">Nuevo Usuario</a>
+    </div>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nombre Apellido</th>
+                    <th>Username</th>
+                    <th>Correo</th>
+                    <th>Teléfono</th>
+                    <th>Perfil</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuario_listado %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ u.nombre }} {{ u.apellido }}</td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.telefono }}</td>
+                    <td>{{ u.perfil }}</td>
+                    <td>
+                        {% if u.activo %}
+                            <span class="badge badge-success">Activo</span>
+                        {% else %}
+                            <span class="badge badge-danger">Bloqueado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-links">
+                            <a href="{% url 'ver_usuario' u.id %}" class="btn btn-sm btn-info">Ver</a>
+                            <a href="{% url 'editar_usuario' u.id %}" class="btn btn-sm btn-warning">Editar</a>
+                            <a href="{% url 'toggle_usuario' u.id %}" class="btn btn-sm btn-secondary">
+                                {% if u.activo %} Bloquear {% else %} Activar {% endif %}
+                            </a>
+                            <a href="{% url 'eliminar_usuario' u.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center;">No existen usuarios registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="action-buttons-footer">
+        <a href="{% url 'dashboard_admin' %}" class="btn btn-secondary">Volver al Panel</a>
+    </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ----- Contenedores de Botones ----- */
+    .action-buttons-header {
+        margin-bottom: 1.5rem;
+    }
+    .action-buttons-footer {
+        margin-top: 1.5rem;
+    }
+
+    /* ----- Estilos de Botones ----- */
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+        background-color: #6c757d; /* Gris secundario por defecto */
+        border: none;
+        border-radius: 0.3rem;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+    }
+    .btn:hover {
+        opacity: 0.85;
+    }
+    
+    .btn-primary {
+        background-color: var(--color-principal); /* Azul */
+        color: white;
+    }
+    .btn-secondary {
+        background-color: #6c757d; /* Gris */
+        color: white;
+    }
+    .btn-info {
+        background-color: #17a2b8; /* Azul info */
+        color: white;
+    }
+    .btn-warning {
+        background-color: var(--advertencia); /* Amarillo */
+        color: var(--texto-principal);
+    }
+    .btn-danger {
+        background-color: var(--error); /* Rojo */
+        color: white;
+    }
+
+    /* Botones pequeños para la tabla */
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    .action-links a {
+        margin-right: 0.25rem;
+    }
+    .action-links {
+        white-space: nowrap; /* Evita que los botones se partan */
+    }
+
+    /* ----- Estilos de Tabla ----- */
+    .table-container {
+        background: #FFFFFF;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        overflow-x: auto; /* Para responsividad en tablas */
+    }
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .data-table th,
+    .data-table td {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+        vertical-align: middle;
+        color: var(--text-color);
+    }
+    .data-table th {
+        background-color: var(--fondo-general);
+        font-weight: 700;
+        color: var(--text-title-color);
+    }
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+    .data-table tr:hover {
+        background-color: #f8f9fa; /* Un hover muy sutil */
+    }
+
+    /* ----- Badges de Estado ----- */
+    .badge {
+        display: inline-block;
+        padding: 0.3em 0.6em;
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 10rem; /* Píldora */
+    }
+    .badge-success {
+        color: #fff;
+        background-color: var(--completado); /* Verde */
+    }
+    .badge-danger {
+        color: #fff;
+        background-color: var(--error); /* Rojo */
+    }
+
+    /* ----- Mensajes de Alerta ----- */
+    .messages-container {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1rem 0;
+    }
+    .message {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.3rem;
+    }
+    .message.success {
+        color: #0f5132;
+        background-color: #d1e7dd;
+        border-color: #badbcc;
+    }
+    .message.error {
+        color: #842029;
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+    }
+    .message.warning {
+        color: #664d03;
+        background-color: #fff3cd;
+        border-color: #ffecb5;
+    }
+    .message.info {
+        color: #055160;
+        background-color: #cff4fc;
+        border-color: #b6effb;
+    }
+
+</style>
+{% endblock %}

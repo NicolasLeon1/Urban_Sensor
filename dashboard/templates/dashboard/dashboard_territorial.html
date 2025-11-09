@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar_content %}
+<li>
+    <a href="{% url 'dashboard_territorial' %}" class="selected">
+        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+        <span>Dashboard</span>
+    </a>
+</li>
+<li>
+    <a href="#mis-reportes-abiertos"> 
+        <img src="{% static 'icons/survey.svg' %}" alt="">
+        <span>Mis Incidencias</span>
+    </a>
+</li>
+<li class="separator"></li>
+<li>
+    <a href="{% url 'logout' %}">
+        <img src="{% static 'icons/logout.svg' %}" alt="">
+        <span>Cerrar Sesión</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Dashboard Territorial</h1>
+
+    <div class="dashboard-stats">
+        <div class="stat-card" style="border-color: #17a2b8;">
+            <h4>Abiertas</h4>
+            <span>{{ stats.abierta|default:0 }}</span>
+        </div>
+        <div class="stat-card" style="border-color: var(--advertencia);">
+            <h4>Derivadas</h4>
+            <span>{{ stats.derivada|default:0 }}</span>
+        </div>
+        <div class="stat-card" style="border-color: var(--error);">
+            <h4>Rechazadas</h4>
+            <span>{{ stats.rechazada|default:0 }}</span>
+        </div>
+        <div class="stat-card" style="border-color: var(--completado);">
+            <h4>Finalizadas</h4>
+            <span>{{ stats.finalizada|default:0 }}</span>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h2>Resumen Gráfico de Incidencias</h2>
+        </div>
+        <div class="card-body" style="padding: 2rem; max-height: 400px; display: flex; justify-content: center; align-items: center;">
+            <canvas id="incidenciasChart"></canvas>
+        </div>
+    </div>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h2>Crear Nueva Incidencia</h2>
+            <p>Seleccione la plantilla de encuesta adecuada para el tipo de solicitud.</p>
+        </div>
+        <div class="card-body">
+            <a href="{% url 'listar_encuestas_responder' %}" class="btn btn-primary" style="width: 100%; text-align: center; font-size: 1.1rem; padding: 1rem;">
+                Iniciar Nuevo Reporte de Incidencia
+            </a>
+        </div>
+    </div>
+    
+    <div class="card" style="margin-top: 2rem;" id="mis-reportes-abiertos">
+    <div class="card-header">
+        <h2>Mis Incidencias Abiertas ({{ listado_abiertas|length }})</h2>
+    </div>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th># Reporte</th>
+                    <th>Encuesta</th>
+                    <th>Fecha Creación</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reporte in listado_abiertas %}
+                <tr>
+                    <td>#{{ reporte.id }}</td>
+                    <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                    <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <span class="badge badge-info">Abierta</span>
+                    </td>
+                 <td>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+        <!-- Botón Ver -->
+        <a href="{% url 'detalle_solicitud_territorial' reporte.id %}"
+           class="btn btn-sm btn-info">
+            Ver
+        </a>
+
+        <!-- Mostrar derivación o badge -->
+        {% if not reporte.departamento_asignado %}
+            <a href="{% url 'derivar_solicitud_territorial' reporte.id %}"
+               class="btn btn-sm btn-primary"
+               onclick="return confirm('¿Confirmas derivar esta incidencia al departamento correspondiente?');">
+                Derivar al Departamento
+            </a>
+        {% else %}
+            <span class="badge badge-warning" 
+                  style="margin-left: auto; font-weight: 600; padding: 0.45rem 0.8rem;">
+                Asignada a {{ reporte.departamento_asignado.nombre_departamento }}
+            </span>
+        {% endif %}
+    </div>
+</td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">
+                        No has creado reportes abiertos.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+    <div class="card" style="margin-top: 2rem;" id="mis-reportes-derivados">
+        <div class="card-header">
+            <h2>Mis Incidencias Derivadas ({{ listado_derivadas|length }})</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <tbody>
+                    {% for reporte in listado_derivadas %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
+                        <td><span class="badge badge-warning">Derivada</span></td>
+                        <td><a href="{% url 'detalle_solicitud_territorial' reporte.id %}" class="btn btn-sm btn-info">  Ver </a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No tienes reportes derivados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;" id="mis-reportes-rechazados">
+        <div class="card-header">
+            <h2>Mis Incidencias Rechazadas ({{ listado_rechazadas|length }})</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <tbody>
+                    {% for reporte in listado_rechazadas %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
+                        <td><span class="badge badge-danger">Rechazada</span></td>
+                        <td><a href="#" class="btn btn-sm btn-info">Ver</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No tienes reportes rechazados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;" id="mis-reportes-finalizados">
+        <div class="card-header">
+            <h2>Mis Incidencias Finalizadas ({{ listado_finalizadas|length }})</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <tbody>
+                    {% for reporte in listado_finalizadas %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
+                        <td><span class="badge badge-success">Finalizada</span></td>
+                        <td><a href="#" class="btn btn-sm btn-info">Ver</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No tienes reportes finalizados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    {{ stats|json_script:"chartData" }}
+
+    <script>
+        // Esperar a que la página cargue
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // Obtener los datos del JSON script que creó Django
+            const statsData = JSON.parse(document.getElementById('chartData').textContent);
+
+            // Obtener el 'canvas' (lienzo) donde dibujaremos
+            const ctx = document.getElementById('incidenciasChart').getContext('2d');
+
+            // Configurar y crear el gráfico
+            new Chart(ctx, {
+                type: 'doughnut', // Tipo de gráfico (dona)
+                data: {
+                    labels: ['Abiertas', 'Derivadas', 'Rechazadas', 'Finalizadas'],
+                    datasets: [{
+                        label: 'Incidencias',
+                        // Usamos los datos del diccionario 'stats'
+                        data: [
+                            statsData.abierta,
+                            statsData.derivada,
+                            statsData.rechazada,
+                            statsData.finalizada
+                        ],
+                        backgroundColor: [
+                            '#17a2b8',    // Color Abiertas (azul-info)
+                            '#ffc107',    // Color Derivadas (amarillo-advertencia)
+                            '#dc3545',    // Color Rechazadas (rojo-error)
+                            '#28a745'     // Color Finalizadas (verde-completado)
+                        ],
+                        borderColor: '#FFFFFF', // Borde blanco entre segmentos
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Permite que se ajuste al 'max-height' del div
+                    plugins: {
+                        legend: {
+                            position: 'right', // Mover la leyenda a la derecha
+                        },
+                        title: {
+                            display: false, // Ocultamos el título (ya está en el card-header)
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: #fff; border-radius: 0.5rem; padding: 1.5rem; border-left: 5px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .stat-card h4 { color: #888; font-size: 1rem; margin-bottom: 0.5rem; text-transform: uppercase; }
+    .stat-card span { color: var(--color-principal); font-size: 2.5rem; font-weight: 700; }
+
+    .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); }
+    .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+    .card-header h2 { color: var(--color-principal); }
+    .card-header p { color: var(--text-color); margin-top: 0.25rem; }
+    .card-body { padding: 1.5rem; }
+
+    .list-item-card { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 0.3rem; margin-bottom: 1rem; }
+    .list-item-card:hover { background-color: var(--fondo-general); }
+    .list-item-content h4 { color: var(--color-secundario); margin-bottom: 0.25rem; }
+    .list-item-content small { color: #6c757d; }
+
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: var(--color-principal); border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+    .btn-info { background-color: #17a2b8; }
+    .btn-primary { background-color: var(--color-principal); }
+
+    .table-container { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th,
+    .data-table td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-color); text-align: left; vertical-align: middle; color: var(--text-color); }
+    .data-table th { background-color: var(--fondo-general); font-weight: 700; color: var(--text-title-color); }
+    .data-table tr:last-child td { border-bottom: none; }
+    
+    .badge { color: white; padding: 0.3em 0.6em; font-size: 0.75rem; font-weight: 700; border-radius: 10rem; }
+    .badge-info { background-color: #17a2b8; }
+    .badge-warning { background-color: var(--advertencia); color: var(--texto-principal); }
+    .badge-danger { background-color: var(--error); }
+    .badge-success { background-color: var(--completado); }
+
+    .messages-container { list-style: none; padding: 0; margin: 1rem 0 0 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
+    .message.error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+</style>
+{% endblock %}
