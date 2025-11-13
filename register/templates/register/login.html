@@ -227,7 +227,11 @@
             </div>
             <button type="submit" class="btn">Iniciar Sesión</button>
         </form>
-        
+        <p style="text-align: center; margin-top: 1rem;">
+            <a href="{% url 'password_reset' %}" style="color: var(--color-principal); text-decoration: none; font-weight: 500;">
+                Olvidé mi contraseña
+            </a>
+        </p>
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}

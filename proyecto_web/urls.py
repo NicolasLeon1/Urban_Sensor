@@ -30,4 +30,5 @@ urlpatterns = [
     path('encuesta/', include('encuesta.urls')),
     path('departamento/', include('departamento.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('', include(('register.urls', 'register'), namespace='register')),
 ]
