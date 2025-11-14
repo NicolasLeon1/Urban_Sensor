@@ -99,7 +99,7 @@
                             <span class="badge badge-info">Abierta</span>
                         </td>
                         <td>
-                            <a href="#" class="btn btn-sm btn-info">Ver</a>
+                            <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a>
                         </td>
                     </tr>
                     {% empty %}
@@ -125,7 +125,7 @@
                         <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
                         <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
                         <td><span class="badge badge-warning">Derivada</span></td>
-                        <td><a href="#" class="btn btn-sm btn-info">Ver</a></td>
+                        <td><a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a></td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -150,7 +150,7 @@
                         <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
                         <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
                         <td><span class="badge badge-danger">Rechazada</span></td>
-                        <td><a href="#" class="btn btn-sm btn-info">Ver</a></td>
+                        <td><a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a></td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -175,7 +175,7 @@
                         <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
                         <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
                         <td><span class="badge badge-success">Finalizada</span></td>
-                        <td><a href="#" class="btn btn-sm btn-info">Ver</a></td>
+                        <td><a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a></td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -255,6 +255,9 @@
     .card-header h2 { color: var(--color-principal); }
     .card-header p { color: var(--text-color); margin-top: 0.25rem; }
     .card-body { padding: 1.5rem; }
+
+    .action-links a {margin-right: 0.25rem;}
+    .action-links {white-space: nowrap;}
 
     .list-item-card { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 0.3rem; margin-bottom: 1rem; }
     .list-item-card:hover { background-color: var(--fondo-general); }
