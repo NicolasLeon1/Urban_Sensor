@@ -10,6 +10,7 @@ urlpatterns = [
     path('editar_encuesta/<int:id>/', views.editar_encuesta, name='editar_encuesta'),
     path('toggle_encuesta/<int:id>/', views.toggle_encuesta, name='toggle_encuesta'),
     path('eliminar_encuesta/<int:id>/', views.eliminar_encuesta, name='eliminar_encuesta'),
+    path('ver_encuesta_respondida/<int:id>', views.ver_encuesta_respondida, name='ver_encuesta_respondida'),
     
     # --- NUEVAS URLs PARA TERRITORIAL (Responder Encuesta) ---
     

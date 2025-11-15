@@ -149,3 +149,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'municipalidad.urban.sensor@gmail.com'
 EMAIL_HOST_PASSWORD = 'fyrt tuhg gagy ajky'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
