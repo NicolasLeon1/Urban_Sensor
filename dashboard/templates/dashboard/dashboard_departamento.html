@@ -67,6 +67,7 @@
                         <th>Prioridad</th>
                         <th>Fecha</th>
                         <th>Derivar a Cuadrilla</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,18 +87,23 @@
                         </td>
                         <td>{{ reporte.creado|date:"d/m/Y" }}</td>
                         <td>
-                            <!-- Formulario para derivar -->
-                            <!-- DEBERÁS CREAR la url 'derivar_incidencia' en la app 'encuesta' o 'reportes' -->
-                            <form action="" method="POST" class="form-derivar">
-                                {% csrf_token %}
-                                <select name="cuadrilla_id" class="form-select-sm" required>
-                                    <option value="">Seleccionar cuadrilla...</option>
-                                    {% for cuadrilla in cuadrillas_departamento %}
-                                        <option value="{{ cuadrilla.id }}">{{ cuadrilla.nombre }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button type="submit" class="btn btn-sm btn-primary">Derivar</button>
-                            </form>
+                            <div class="action-links">
+                                <form action="" method="POST" class="form-derivar">
+                                    {% csrf_token %}
+                                    <select name="cuadrilla_id" class="form-select-sm" required>
+                                        <option value="">Seleccionar cuadrilla...</option>
+                                        {% for cuadrilla in cuadrillas_departamento %}
+                                            <option value="{{ cuadrilla.id }}">{{ cuadrilla.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">Derivar</button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-primary">Ver</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
@@ -126,6 +132,8 @@
     .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: var(--color-principal); border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
     .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
     .btn-primary { background-color: var(--color-principal); }
+    .action-links a { margin-right: 0.25rem; }
+    .action-links { white-space: nowrap; }
 
     .table-container { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; }
