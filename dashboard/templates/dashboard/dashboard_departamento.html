@@ -218,7 +218,7 @@
                         <td>
                             <div class="action-links">
                                 <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-primary">Detalle</a>
-                                <a href="{% url 'reabrir_solicitud' reporte.id %}" class="btn btn-sm btn-warning">Revertir</a>
+                                <a href="{% url 'reabrir_incidencia' reporte.id %}" class="btn btn-sm btn-warning">Revertir</a>
                                 <button class="btn btn-sm btn-danger btn-rechazar" data-reporte-id="{{ reporte.id }}" data-reporte-titulo="{{ reporte.encuesta_base.titulo_encuesta }}" data-motivo-rechazo="{{ reporte.descripcion_rechazo }}">Cambiar Motivo</button>
                             </div>
                         </td>

@@ -1,6 +1,21 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block sidebar_content %}
+<li>
+    <a href="{% url 'dashboard_territorial' %}" class="selected">
+        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+        <span>Dashboard</span>
+    </a>
+</li>
 
+<li class="separator"></li>
+<li>
+    <a href="{% url 'logout' %}">
+        <img src="{% static 'icons/logout.svg' %}" alt="">
+        <span>Cerrar Sesión</span>
+    </a>
+</li>
+{% endblock %}
 {% block content %}
     <h1 style="color: var(--color-principal);">Detalle de la Encuesta</h1>
 

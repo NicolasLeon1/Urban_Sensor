@@ -22,31 +22,13 @@
             </div>
         </div>
         <div class="right">
-            <a href="#">
-                <img src="{% static 'icons/bell.svg' %}" alt="notification">
-            </a>
-            <a href="#"></a>
-            <a href="#"></a>
-            <img src="{% static 'icons/profile.svg' %}" alt="profile-icon">
-        </div>
+            </div>
     </header>
 
     <div class="sidebar" id="sidebar">
         <nav>
             <ul class="sidebar-list">
                 {% block sidebar_content %}
-                <li>
-                    <a href="#" class="selected">
-                        <img src="{% static 'icons/dashboard.svg' %}" alt="">
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <img src="{% static 'icons/dashboard.svg' %}" alt="">
-                        <span>Dashboard</span>
-                    </a>
-                </li>
                 {% endblock %}
             </ul>
         </nav>

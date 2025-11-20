@@ -289,7 +289,7 @@ def responder_encuesta(request, id_encuesta):
             'preguntas': preguntas
         })
 
-@check_perfil(Perfiles.TERRITORIAL, Perfiles.DEPARTAMENTO, Perfiles.CUADRILLA)
+@check_perfil(Perfiles.TERRITORIAL, Perfiles.DEPARTAMENTO, Perfiles.CUADRILLA, Perfiles.DIRECCION)
 def ver_encuesta_respondida(request, id):
     try:
         solicitud = SolicitudIncidencia.objects.get(id=id)
