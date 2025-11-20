@@ -1,0 +1,524 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block sidebar_content %}
+<li>
+    <a href="{% url 'dashboard_territorial' %}" class="selected">
+        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+        <span>Dashboard</span>
+    </a>
+</li>
+
+<li class="separator"></li>
+<li>
+    <a href="{% url 'logout' %}">
+        <img src="{% static 'icons/logout.svg' %}" alt="">
+        <span>Cerrar Sesión</span>
+    </a>
+</li>
+{% endblock %}
+{% block content %}
+    
+    <h1 style="color: var(--color-principal);">{{ encuesta_data.titulo_encuesta }}</h1>
+    <p style="margin-top: -0.5rem; margin-bottom: 1rem; color: #6c757d; font-size: 1.1rem;">
+        {{ encuesta_data.descripcion_incidente }}
+    </p>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- SECCIÓN DE RECHAZO DESTACADA -->
+    {% if solicitud.estado == 'rechazada' %}
+    <div class="rechazo-seccion">
+        <div class="rechazo-header">
+            <div class="rechazo-icono">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 class="rechazo-title">Motivo del Rechazo</h2>
+        </div>
+        <div class="rechazo-content">
+            <div class="rechazo-descripcion">
+                {{ solicitud.descripcion_rechazo }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2>
+                {% if solicitud.estado == 'rechazada' %}
+                    Reabrir Incidencia
+                {% else %}
+                    Editar Incidencia
+                {% endif %}
+            </h2>
+            <p>
+                {% if solicitud.estado == 'rechazada' %}
+                    Modifique la información según las observaciones y reabra la incidencia.
+                {% else %}
+                    Modifique la información de la incidencia según sea necesario.
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="POST" action="{% url 'editar_encuesta_respondida' solicitud.id %}" enctype="multipart/form-data" id="editarForm">
+            {% csrf_token %}
+            
+            <div class="card-body">
+
+                <div class="form-group">
+                    <label for="ubicacion">
+                        Ubicación del incidente
+                    </label>
+                    <input 
+                        type="text" 
+                        name="ubicacion" 
+                        id="ubicacion" 
+                        class="form-control"
+                        placeholder="Ingrese la dirección o ubicación del incidente"
+                        value="{{ solicitud.ubicacion }}"
+                        required
+                    >
+                </div>
+                
+                {% for item in preguntas_con_respuestas %}
+                    <div class="form-group">
+                        <label for="pregunta_{{ item.pregunta.id }}">
+                            {{ item.pregunta.texto_pregunta }}
+                        </label>
+                        
+                        <textarea 
+                            name="pregunta_{{ item.pregunta.id }}" 
+                            id="pregunta_{{ item.pregunta.id }}" 
+                            rows="4" 
+                            class="form-control"
+                            required
+                        >{% if item.respuesta %}{{ item.respuesta.respuesta_texto }}{% endif %}</textarea>
+                    </div>
+                {% empty %}
+                    <p style="text-align: center; color: #6c757d;">
+                        Esta encuesta no tiene preguntas. Contacte a SECPLA.
+                    </p>
+                {% endfor %}
+
+                <div class="form-group">
+                    <label for="archivos">
+                        Adjuntar evidencias (opcional)
+                    </label>
+                    <input 
+                        type="file" 
+                        name="archivos" 
+                        id="archivos" 
+                        class="form-control"
+                        multiple
+                        accept="image/*, video/*"
+                    >
+                    <small style="color: #6c757d; font-size: 0.875rem;">
+                        Formatos permitidos: Imágenes (JPG, PNG, GIF, WEBP) y Videos (MP4, AVI, MOV, MPEG). 
+                        Tamaño máximo por archivo: 20MB. Puede seleccionar múltiples archivos.
+                    </small>
+                </div>
+
+                {% if archivos_adjuntos %}
+                <div class="archivos-existente-container">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-title-color);">
+                        Archivos adjuntos actuales
+                    </h4>
+                    <div class="archivos-lista">
+                        {% for archivo in archivos_adjuntos %}
+                            <div class="archivo-item">
+                                {% if archivo.tipo_contenido|slice:":5" == "image" %}
+                                    <img src="{{ archivo.archivo.url }}" alt="{{ archivo.nombre_original }}" class="archivo-preview">
+                                {% else %}
+                                    <div class="video-preview">
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 2rem;">🎥</div>
+                                            <div style="font-size: 0.7rem; margin-top: 0.5rem;">VIDEO</div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <div class="archivo-info">
+                                    <div class="archivo-nombre" title="{{ archivo.nombre_original }}">
+                                        {{ archivo.nombre_original|truncatechars:20 }}
+                                    </div>
+                                    <div>{{ archivo.tamaño|filesizeformat }}</div>
+                                    <div style="font-size: 0.7rem; color: #28a745; margin-top: 0.25rem;">
+                                        {{ archivo.tipo_contenido|slice:":5"|upper }}
+                                    </div>
+                                    <label class="remove-checkbox">
+                                        <input type="checkbox" name="eliminar_archivos" value="{{ archivo.id }}">
+                                        Eliminar
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div id="vista-previa" class="vista-previa-container" style="display: none;">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-title-color);">
+                        Archivos nuevos seleccionados: <span id="contador-archivos">0</span>
+                    </h4>
+                    <div id="archivos-lista" class="archivos-lista"></div>
+                </div>
+
+            </div>
+
+            <div class="card-footer">
+                <a href="{% url 'to_dashboard' %}" class="btn btn-secondary">
+                    Volver
+                </a>
+                
+                <button type="submit" class="btn btn-primary">
+                    {% if solicitud.estado == 'rechazada' %}
+                        Reabrir Incidencia
+                    {% else %}
+                        Actualizar Incidencia
+                    {% endif %}
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Formulario oculto para cancelar incidencia -->
+    {% if solicitud.estado == 'rechazada' %}
+    <form method="POST" action="{% url 'cancelar_incidencia' solicitud.id %}" id="cancelarForm" style="display: none;">
+        {% csrf_token %}
+    </form>
+    {% endif %}
+    
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); }
+    .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+    .card-header h2 { color: var(--color-principal); }
+    .card-header p { color: var(--text-color); margin-top: 0.25rem; }
+    .card-body { padding: 1.5rem; }
+    .card-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        background-color: var(--fondo-general);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    /* Sección de rechazo destacada */
+    .rechazo-seccion {
+        background-color: #fff8f8;
+        border: 2px solid var(--error);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .rechazo-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #ffcdd2;
+        padding-bottom: 0.75rem;
+    }
+    .rechazo-icono {
+        color: var(--error);
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .rechazo-title {
+        color: var(--error);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .rechazo-descripcion {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: #d32f2f;
+        background-color: #ffebee;
+        padding: 1.25rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--error);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 700;
+        color: var(--text-title-color);
+        margin-bottom: 0.5rem;
+        font-size: 1.05rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: var(--text-color);
+        background-color: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 0.3rem;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+    
+    input[type="file"].form-control {
+        padding: 0.5rem 1rem;
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+    
+    .form-control:focus {
+        border-color: var(--color-principal);
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .btn { 
+        display: inline-block; 
+        padding: 0.6rem 1.25rem; 
+        font-size: 0.95rem; 
+        font-weight: 500; 
+        text-align: center; 
+        text-decoration: none; 
+        color: white; 
+        background-color: var(--color-principal); 
+        border: none; 
+        border-radius: 0.3rem; 
+        cursor: pointer; 
+        transition: opacity 0.2s ease; 
+    }
+    .btn:hover { opacity: 0.85; }
+    
+    .btn-primary { background-color: var(--color-principal); }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-danger { background-color: #dc3545; color: white; }
+    .btn-secondary:hover, .btn-danger:hover { opacity: 0.8; }
+
+    .messages-container { list-style: none; padding: 0; margin: 1rem 0 0 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
+    .message.error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+
+    /* Estilos para vista previa y archivos existentes */
+    .vista-previa-container, .archivos-existente-container {
+        margin-top: 1rem;
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .archivos-lista {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+    }
+
+    .archivo-item {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    .archivo-preview {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 0.25rem;
+        margin-bottom: 0.75rem;
+        background: #f8f9fa;
+    }
+
+    .video-preview {
+        width: 100%;
+        height: 120px;
+        background: #000;
+        border-radius: 0.25rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .archivo-info {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .archivo-nombre {
+        font-weight: 600;
+        color: var(--text-title-color);
+        margin-bottom: 0.25rem;
+        word-break: break-word;
+    }
+
+    .remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 0.25rem;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        transition: background-color 0.2s;
+    }
+
+    .remove-btn:hover {
+        background: #c82333;
+    }
+
+    .remove-checkbox {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #dc3545;
+        cursor: pointer;
+    }
+
+    .remove-checkbox input {
+        margin-right: 0.25rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+        padding: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('archivos');
+        const vistaPrevia = document.getElementById('vista-previa');
+        const archivosLista = document.getElementById('archivos-lista');
+        const contadorArchivos = document.getElementById('contador-archivos');
+
+        fileInput.addEventListener('change', function(e) {
+            updateVistaPrevia();
+        });
+
+        function updateVistaPrevia() {
+            archivosLista.innerHTML = '';
+            
+            if (fileInput.files.length > 0) {
+                vistaPrevia.style.display = 'block';
+                contadorArchivos.textContent = fileInput.files.length;
+                
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    const file = fileInput.files[i];
+                    createFilePreview(file, i);
+                }
+            } else {
+                vistaPrevia.style.display = 'none';
+                contadorArchivos.textContent = '0';
+            }
+        }
+
+        function createFilePreview(file, index) {
+            const archivoItem = document.createElement('div');
+            archivoItem.className = 'archivo-item';
+            archivoItem.dataset.fileIndex = index;
+            
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'archivo-preview';
+                    img.alt = file.name;
+                    archivoItem.appendChild(img);
+                    addFileInfo(archivoItem, file);
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'video-preview';
+                videoContainer.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem;">🎥</div>
+                        <div style="font-size: 0.7rem; margin-top: 0.5rem;">VIDEO</div>
+                    </div>
+                `;
+                archivoItem.appendChild(videoContainer);
+                addFileInfo(archivoItem, file);
+            }
+            
+            archivosLista.appendChild(archivoItem);
+        }
+
+        function addFileInfo(container, file) {
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'archivo-info';
+            
+            const fileName = file.name.length > 20 ? 
+                file.name.substring(0, 17) + '...' + file.name.split('.').pop() : 
+                file.name;
+            
+            infoDiv.innerHTML = `
+                <div class="archivo-nombre" title="${file.name}">${fileName}</div>
+                <div>${formatFileSize(file.size)}</div>
+                <div style="font-size: 0.7rem; color: #28a745; margin-top: 0.25rem;">
+                    ${file.type.split('/')[0].toUpperCase()}
+                </div>
+                <button type="button" class="remove-btn" onclick="removeFile(${Array.from(fileInput.files).indexOf(file)})">
+                    Eliminar
+                </button>
+            `;
+            container.appendChild(infoDiv);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        window.removeFile = function(index) {
+            const dt = new DataTransfer();
+            const files = Array.from(fileInput.files);
+            
+            files.forEach((file, i) => {
+                if (i !== index) {
+                    dt.items.add(file);
+                }
+            });
+            
+            fileInput.files = dt.files;
+            updateVistaPrevia();
+        };
+
+        // Función para confirmar cancelación de incidencia
+        window.confirmarCancelacion = function() {
+            if (confirm('¿Está seguro de que desea cancelar esta incidencia? Esta acción no se puede deshacer.')) {
+                document.getElementById('cancelarForm').submit();
+            }
+        };
+    });
+</script>
+{% endblock %}
