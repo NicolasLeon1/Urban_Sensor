@@ -1,0 +1,18 @@
+# Ignorar entornos virtuales de Conda
+/venv/
+/envs/
+/miniconda3/
+
+# Ignorar archivos específicos de Python
+__pycache__/
+*.pyc
+
+# Ignorar archivos específicos de Django
+.DS_Store # (Para usuarios de Mac)
+
+# Ignorar archivos de configuración local (seguridad/bases de datos)
+# ¡MUY IMPORTANTE! Nunca subas secretos/passwords
+/settings_local.py
+
+# Archivos de base de datos local (SQLite, si se usara)
+*.sqlite3

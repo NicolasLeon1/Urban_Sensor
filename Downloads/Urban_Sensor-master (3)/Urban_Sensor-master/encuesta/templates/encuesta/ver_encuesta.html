@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block sidebar_content %}
+<li>
+    <a href="{% url 'dashboard_admin' %}"> {# Asumo que tienes una url llamada dashboard_admin #}
+        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+        <span>Dashboard</span>
+    </a>
+</li>
+<li>
+    {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
+    <a href="{% url 'main_usuario' %}" class="selected">
+        <img src="{% static 'icons/users.svg' %}" alt="">
+        <span>Gestión de Usuarios</span>
+    </a>
+</li>
+<li>
+    <a href="{% url 'main_encuesta' %}">
+        <img src="{% static 'icons/survey.svg' %}" alt="">
+        <span>Módulo Encuesta</span>
+    </a>
+</li>
+<li>
+    <a href="{% url 'main_direccion' %}">
+        <img src="{% static 'icons/location.svg' %}" alt="">
+        <span>Módulo Dirección</span>
+    </a>
+</li>
+<li>
+    <a href="{% url 'main_departamento' %}">
+        <img src="{% static 'icons/department.svg' %}" alt="">
+        <span>Módulo Departamento</span>
+    </a>
+</li>
+<li>
+    <a href="{% url 'main_incidencia' %}">
+        <img src="{% static 'icons/bell.svg' %}" alt="">
+        <span>Módulo Incidencia</span>
+    </a>
+</li>
+<li class="separator"></li>
+<li>
+    <a href="{% url 'logout' %}">
+        <img src="{% static 'icons/logout.svg' %}" alt="">
+        <span>Cerrar Sesión</span>
+    </a>
+</li>
+{% endblock %}
+{% block content %}
+    <h1 style="color: var(--color-principal);">Detalle de la Encuesta</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="detail-grid">
+                <div class="detail-item full-span">
+                    <span class="detail-label">Título:</span>
+                    <span class="detail-value">{{ encuesta_data.titulo_encuesta }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Departamento:</span>
+                    <span class="detail-value">{{ encuesta_data.id_departamento.nombre_departamento }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tipo de Incidencia:</span>
+                    <span class="detail-value">{{ encuesta_data.id_tipo_incidencia.nombre_incidencia }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prioridad:</span>
+                    <span class="detail-value">
+                        {% if encuesta_data.prioridad == 'alta' %}
+                            <span class="badge badge-danger">Alta</span>
+                        {% elif encuesta_data.prioridad == 'media' %}
+                            <span class="badge badge-warning">Media</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Baja</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Estado:</span>
+                    <span class="detail-value">
+                        {% if encuesta_data.activo %}
+                            <span class="badge badge-success">Activo</span>
+                        {% else %}
+                            <span class="badge badge-danger">Bloqueado</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <hr class="form-divider">
+
+            <div class_ ="pregunta-seccion">
+                <h2 class="form-subtitle">Preguntas</h2>
+                {% if preguntas %}
+                    <ol class="pregunta-list">
+                    {% for pregunta in preguntas %}
+                        <li>{{ pregunta.texto_pregunta }}</li>
+                    {% endfor %}
+                    </ol>
+                {% else %}
+                    <p>No hay preguntas asignadas a esta encuesta.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <div class="action-buttons-footer">
+        <a href="{% url 'main_encuesta' %}" class="btn btn-secondary">Volver al Listado</a>
+    </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; }
+    
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .detail-item { display: flex; flex-direction: column; }
+    .detail-item.full-span { grid-column: 1 / -1; }
+    .detail-label { font-size: 0.9rem; font-weight: 500; color: #888; margin-bottom: 0.25rem; }
+    .detail-value { font-size: 1.1rem; color: var(--text-color); }
+
+    .form-divider { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
+    .form-subtitle { color: var(--color-principal); font-size: 1.2rem; margin-bottom: 1rem; }
+
+    /* Lista de Preguntas */
+    .pregunta-list {
+        margin-left: 1.5rem;
+        color: var(--text-color);
+    }
+    .pregunta-list li {
+        padding: 0.5rem 0;
+        font-size: 1.05rem;
+    }
+
+    /* Botones */
+    .action-buttons-footer { margin-top: 1.5rem; }
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 0.3em 0.6em; font-size: 0.85rem; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 10rem; }
+    .badge-success { color: #fff; background-color: var(--completado); }
+    .badge-danger { color: #fff; background-color: var(--error); }
+    .badge-warning { color: var(--texto-principal); background-color: var(--advertencia); }
+    .badge-secondary { color: #fff; background-color: #6c757d; }
+</style>
+{% endblock %}
