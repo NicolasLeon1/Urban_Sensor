@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar_content %}
+<li>
+    <a href="{% url 'dashboard_departamento' %}" class="selected">
+        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+        <span>Dashboard</span>
+    </a>
+</li>
+<li>
+    <a href="#incidencias-departamento">
+        <img src="{% static 'icons/bell.svg' %}" alt="">
+        <span>Gestionar Incidencias</span>
+    </a>
+</li>
+<li class="separator"></li>
+<li>
+    <a href="{% url 'logout' %}">
+        <img src="{% static 'icons/logout.svg' %}" alt="">
+        <span>Cerrar Sesión</span>
+    </a>
+</li>
+{% endblock %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Panel de Departamento</h1>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user.nombre }} {{ user.apellido }}.</p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Departamento Asignado: <strong>{{ user.departamento }}</strong></p>
+
+    <div class="dashboard-stats">
+        <div class="stat-card" style="border-color: #17a2b8;">
+            <h4>Abiertas (Sin Asignar)</h4>
+            <span>{{ conteo_abiertas|default:0 }}</span>
+        </div>
+        <div class="stat-card" style="border-color: var(--advertencia);">
+            <h4>Derivadas (Asignadas)</h4>
+            <span>{{ conteo_derivadas|default:0 }}</span>
+        </div>
+        <div class="stat-card" style="border-color: var(--error);">
+            <h4>Rechazadas</h4>
+            <span>{{ conteo_rechazadas|default:0 }}</span>
+        </div>
+        <div class="stat-card" style="border-color: var(--completado);">
+            <h4>Finalizadas</h4>
+            <span>{{ conteo_finalizadas|default:0 }}</span>
+        </div>
+    </div>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="card" style="margin-top: 2rem;" id="incidencias-departamento">
+        <div class="card-header">
+            <h2>Incidencias Pendientes</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Incidencia</th>
+                        <th>Tipo Incidencia</th>
+                        <th>Prioridad</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                        <th>Derivar a Cuadrilla</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in solicitudes_pendientes %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
+                        <td>
+                            {% if reporte.encuesta_base.prioridad == 'alta' %}
+                                <span class="badge badge-danger">Alta</span>
+                            {% elif reporte.encuesta_base.prioridad == 'media' %}
+                                <span class="badge badge-warning">Normal</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Baja</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-primary">Detalle</a>
+                                <button class="btn btn-sm btn-danger btn-rechazar" data-reporte-id="{{ reporte.id }}" data-reporte-titulo="{{ reporte.encuesta_base.titulo_encuesta }}">Rechazar</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <form action="{% url 'derivar_incidencia' reporte.id %}" method="POST" class="form-derivar">
+                                    {% csrf_token %}
+                                    <select name="cuadrilla_id" class="form-select-sm" required>
+                                        <option value="">Seleccionar cuadrilla...</option>
+                                        {% for cuadrilla in cuadrillas_departamento %}
+                                            <option value="{{ cuadrilla.id }}">{{ cuadrilla }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">Derivar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No hay incidencias abiertas pendientes de derivación.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;" id="incidencias-departamento">
+        <div class="card-header">
+            <h2>Incidencias Derivadas</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Incidencia</th>
+                        <th>Tipo Incidencia</th>
+                        <th>Prioridad</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                        <th>Cambiar Cuadrilla</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in solicitudes_derivadas %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
+                        <td>
+                            {% if reporte.encuesta_base.prioridad == 'alta' %}
+                                <span class="badge badge-danger">Alta</span>
+                            {% elif reporte.encuesta_base.prioridad == 'media' %}
+                                <span class="badge badge-warning">Normal</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Baja</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-primary">Detalle</a>
+                                <a href="{% url 'revertir_incidencia' reporte.id %}" class="btn btn-sm btn-warning">Revertir</a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <form action="{% url 'derivar_incidencia' reporte.id %}" method="POST" class="form-derivar">
+                                    {% csrf_token %}
+                                    <select name="cuadrilla_id" class="form-select-sm" required>
+                                        <option value="">Seleccionar cuadrilla...</option>
+                                        {% for cuadrilla in cuadrillas_departamento %}
+                                            <option value="{{ cuadrilla.id }}" {% if reporte.cuadrilla_asignada.id == cuadrilla.id %}selected{% endif %}>{{ cuadrilla }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-primary">Cambiar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">No hay incidencias derivadas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;" id="incidencias-departamento">
+        <div class="card-header">
+            <h2>Incidencias Rechazadas</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Incidencia</th>
+                        <th>Tipo Incidencia</th>
+                        <th>Prioridad</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in solicitudes_rechazadas %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
+                        <td>
+                            {% if reporte.encuesta_base.prioridad == 'alta' %}
+                                <span class="badge badge-danger">Alta</span>
+                            {% elif reporte.encuesta_base.prioridad == 'media' %}
+                                <span class="badge badge-warning">Normal</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Baja</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-primary">Detalle</a>
+                                <a href="{% url 'reabrir_solicitud' reporte.id %}" class="btn btn-sm btn-warning">Revertir</a>
+                                <button class="btn btn-sm btn-danger btn-rechazar" data-reporte-id="{{ reporte.id }}" data-reporte-titulo="{{ reporte.encuesta_base.titulo_encuesta }}" data-motivo-rechazo="{{ reporte.descripcion_rechazo }}">Cambiar Motivo</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center;">No hay incidencias rechazadas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;" id="incidencias-departamento">
+        <div class="card-header">
+            <h2>Incidencias Finalizadas</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Incidencia</th>
+                        <th>Tipo Incidencia</th>
+                        <th>Prioridad</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in solicitudes_finalizadas %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
+                        <td>
+                            {% if reporte.encuesta_base.prioridad == 'alta' %}
+                                <span class="badge badge-danger">Alta</span>
+                            {% elif reporte.encuesta_base.prioridad == 'media' %}
+                                <span class="badge badge-warning">Normal</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Baja</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-primary">Detalle</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center;">No hay incidencias finalizadas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="modalRechazar" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 style="color: var(--error); margin-bottom: 1.5rem;">Rechazar Solicitud</h2>
+            <p id="modal-titulo" style="margin-bottom: 1rem; font-weight: 500;"></p>
+            <form id="form-rechazar" method="POST" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="motivo_rechazo" class="form-label">Motivo del Rechazo:</label>
+                    <textarea id="motivo_rechazo" name="motivo_rechazo" class="form-textarea" rows="5" required placeholder="Describa el motivo por el cual rechaza esta solicitud..."></textarea>
+                </div>
+                <div class="form-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Rechazo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: #fff; border-radius: 0.5rem; padding: 1.5rem; border-left: 5px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .stat-card h4 { color: #888; font-size: 1rem; margin-bottom: 0.5rem; text-transform: uppercase; }
+    .stat-card span { color: var(--color-principal); font-size: 2.5rem; font-weight: 700; }
+
+    .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); }
+    .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
+    .card-header h2 { color: var(--color-principal); }
+
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: var(--color-principal); border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+    .btn-primary { background-color: var(--color-principal); }
+    .btn-warning { background-color: var(--advertencia); color: black}
+    .btn-danger { background-color: var(--error); color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .action-links a { margin-right: 0.25rem; }
+    .action-links { white-space: nowrap; }
+
+    .table-container { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th,
+    .data-table td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-color); text-align: left; vertical-align: middle; color: var(--text-color); }
+    .data-table th { background-color: var(--fondo-general); font-weight: 700; color: var(--text-title-color); }
+    .data-table tr:last-child td { border-bottom: none; }
+    
+    .badge { color: white; padding: 0.3em 0.6em; font-size: 0.75rem; font-weight: 700; border-radius: 10rem; }
+    .badge-warning { background-color: var(--advertencia); color: var(--texto-principal); }
+    .badge-danger { background-color: var(--error); }
+    .badge-success { background-color: var(--completado); }
+    .badge-secondary { background-color: #6c757d; }
+
+    .form-derivar { display: flex; gap: 0.5rem; align-items: center; }
+    .form-select-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border-color); border-radius: 0.3rem; }
+    
+    .messages-container { list-style: none; padding: 0; margin: 1rem 0 0 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
+    .message.error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+    
+    /* Estilos para el modal de rechazo */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+        position: relative;
+        margin: 10% auto;
+        padding: 2rem;
+        width: 90%;
+        max-width: 600px;
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover {
+        color: #000;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-title-color);
+    }
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.3rem;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: vertical;
+        transition: border-color 0.2s ease;
+    }
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--color-principal);
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('modalRechazar');
+        const closeBtn = document.querySelector('.close');
+        const cancelBtn = document.getElementById('btn-cancelar');
+        const formRechazar = document.getElementById('form-rechazar');
+        const modalTitulo = document.getElementById('modal-titulo');
+        const rechazoText = document.getElementById('motivo_rechazo');
+        
+        document.querySelectorAll('.btn-rechazar').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const reporteId = this.getAttribute('data-reporte-id');
+                const reporteTitulo = this.getAttribute('data-reporte-titulo');
+                const reporteMotivo = this.getAttribute('data-motivo-rechazo');
+                
+                modalTitulo.textContent = `¿Está seguro que desea rechazar la solicitud "${reporteTitulo}"?`;
+                rechazoText.textContent = reporteMotivo;
+                formRechazar.action = "{% url 'rechazar_incidencia' 0 %}".replace('0', reporteId);
+                modal.style.display = 'block';
+            });
+        });
+        
+        function cerrarModal() {
+            modal.style.display = 'none';
+            formRechazar.reset();
+        }
+        
+        closeBtn.onclick = cerrarModal;
+        cancelBtn.onclick = cerrarModal;
+        
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                cerrarModal();
+            }
+        }
+        
+        formRechazar.addEventListener('submit', function(e) {
+            const motivo = document.getElementById('motivo_rechazo').value.trim();
+            if (!motivo) {
+                e.preventDefault();
+                alert('Por favor, ingrese el motivo del rechazo.');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

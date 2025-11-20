@@ -1,32 +1,6 @@
 from django.db import models
-
-# Create your models here.
-
-##############################################
-
-#Temporal, en espera al modulo Departamento
-class Departamento(models.Model):
-    nombre_departamento = models.CharField(max_length=200, blank=False)
-    activo = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = 'departamento'
-        verbose_name = 'Departamento'
-        verbose_name_plural = 'Departamentos'
-
-##############################################
-
-class TipoIncidencia(models.Model):
-    nombre_incidencia = models.CharField(max_length=240)
-    activo = models.BooleanField(default=True)
-
-    class Meta:
-        db_table = 'tipo_incidencia'
-        verbose_name = 'Tipo de incidencia'
-        verbose_name_plural = 'Tipo de incidencias'
-    
-    def __str__(self):
-        return self.nombre_incidencia
+from departamento.models import Departamento
+from incidencia.models import SolicitudIncidencia
 
 class Encuesta(models.Model):
     PRIORIDADES = [
@@ -36,7 +10,9 @@ class Encuesta(models.Model):
     ]
 
     id_departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE)
-    id_tipo_incidencia = models.ForeignKey(TipoIncidencia, on_delete=models.CASCADE)
+    
+    id_tipo_incidencia = models.ForeignKey("incidencia.TipoIncidencia", on_delete=models.CASCADE)
+    
     titulo_encuesta = models.CharField(max_length=240, blank=False)
     descripcion_incidente = models.CharField()
     prioridad = models.CharField(max_length=10, choices=PRIORIDADES, default='media')
@@ -52,7 +28,7 @@ class Encuesta(models.Model):
         return self.titulo_encuesta
 
 class Pregunta(models.Model):
-    id_encuesta = models.ForeignKey(Encuesta, on_delete=models.CASCADE)
+    id_encuesta = models.ForeignKey(Encuesta, on_delete=models.CASCADE, related_name='pregunta_set') # related_name añadido
     texto_pregunta = models.CharField(max_length=500)
 
     class Meta:
@@ -63,14 +39,31 @@ class Pregunta(models.Model):
     def __str__(self):
         return self.texto_pregunta
 
-class Respuesta(models.Model):
-    id_pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
-    respuesta = models.CharField(max_length=1000)
+class ArchivoSolicitud(models.Model):
+    TIPOS_ARCHIVO = [
+        ('evidencia', 'Evidencia Original'),
+        ('resolucion', 'Archivo de Resolución'),
+    ]
 
-    class Meta:
-        db_table = 'respuesta_pregunta'
-        verbose_name = 'Respuesta de pregunta'
-        verbose_name_plural = 'Respuestas de preguntas'
+    solicitud = models.ForeignKey(
+        SolicitudIncidencia,
+        on_delete=models.CASCADE,
+        related_name='archivos_adjuntos'
+    )
+    archivo = models.FileField(
+        upload_to='solicitudes/adjuntos/%Y/%m/%d/',
+        verbose_name='Archivo adjunto'
+    )
+    nombre_original = models.CharField(max_length=255)
+    tipo_contenido = models.CharField(max_length=100)
+    tamaño = models.BigIntegerField(help_text='Tamaño en bytes')
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+    tipo = models.CharField(choices=TIPOS_ARCHIVO, default='evidencia')
     
     def __str__(self):
-        return self.respuesta
+        return f"{self.nombre_original} - {self.solicitud.id}"
+    
+    class Meta:
+        verbose_name = 'Archivo adjunto'
+        verbose_name_plural = 'Archivos adjuntos'
+        ordering = ['-fecha_subida']

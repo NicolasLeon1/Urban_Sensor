@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Editar Incidencia: {{ incidencia_data.nombre_incidencia }}</h1>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id_incidencia" value="{{ incidencia_data.id }}">
+
+                <div class="form-group">
+                    <label for="nombre_incidencia" class="form-label">Nombre Incidencia</label>
+                    <input type="text" class="form-control" id="nombre_incidencia" name="nombre_incidencia" value="{{ incidencia_data.nombre_incidencia }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_direccion" class="form-label">Dirección</label>
+                    <select name="id_direccion" id="id_direccion" class="form-select" required>
+                        <option value="">Seleccione una dirección</option>
+                        {% for direccion in direcciones %}
+                            <option value="{{ direccion.id_direccion }}" {% if direccion.id_direccion == incidencia_data.id_direccion.id_direccion %}selected{% endif %}>{{ direccion.nombre_direccion }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group" id="departamento-field">
+                    <label for="id_departamento" class="form-label">Departamento</label>
+                    <select name="id_departamento" id="id_departamento" class="form-select" required>
+                        <option value="">Elija una opción</option>
+                        {% for departamento in departamentos %}
+                            <option value="{{ departamento.id }}" 
+                                    data-direccion="{{ departamento.direccion.id_direccion }}"
+                                    {% if departamento.id == incidencia_data.id_departamento.id %}selected{% endif %}>
+                                {{ departamento.nombre_departamento }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="action-buttons-footer">
+                    <a href="{% url 'main_incidencia' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos de Formulario */
+    .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; max-width: 700px; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color); }
+    .form-control,
+    .form-select { width: 100%; padding: 0.75rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 0.3rem; background-color: #FFFFFF; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .form-control:focus,
+    .form-select:focus { outline: none; border-color: var(--color-principal); box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2); }
+
+    /* Botones */
+    .action-buttons-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; }
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background-color: var(--color-principal); color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+
+    /* ----- Mensajes de Alerta ----- */
+    .messages-container { list-style: none; padding: 0; margin: 0 0 1rem 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.error {
+        color: #842029; background-color: #f8d7da; border-color: #f5c2c7;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const direccionSelect = document.getElementById('id_direccion');
+    const departamentoField = document.getElementById('departamento-field');
+    const departamentoSelect = document.getElementById('id_departamento');
+    const departamentoOptions = departamentoSelect.querySelectorAll('option[data-direccion]');
+    
+    // Guardar el departamento seleccionado actualmente
+    const departamentoSeleccionado = departamentoSelect.value;
+    
+    function actualizarDepartamentos() {
+        const direccionId = direccionSelect.value;
+        
+        if (direccionId) {
+            // Mostrar solo los departamentos de la dirección seleccionada
+            departamentoOptions.forEach(option => {
+                if (option.getAttribute('data-direccion') === direccionId) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            departamentoField.style.display = 'block';
+            
+            // Verificar si el departamento actualmente seleccionado pertenece a la nueva dirección
+            const opcionSeleccionada = departamentoSelect.querySelector(`option[value="${departamentoSeleccionado}"]`);
+            if (opcionSeleccionada && opcionSeleccionada.getAttribute('data-direccion') !== direccionId) {
+                // Si no pertenece, limpiar la selección
+                departamentoSelect.value = '';
+            }
+        } else {
+            departamentoField.style.display = 'none';
+            departamentoSelect.value = '';
+        }
+    }
+    
+    direccionSelect.addEventListener('change', actualizarDepartamentos);
+    
+    // Ejecutar al cargar la página para aplicar el filtro inicial
+    actualizarDepartamentos();
+});
+</script>
+{% endblock %}

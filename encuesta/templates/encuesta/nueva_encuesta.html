@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Crear Encuesta</h1>
+
+    {% if messages %}
+        <ul class="messages-container">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <form action="{% url 'nueva_encuesta' %}" method="POST">
+                {% csrf_token %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_titulo" class="form-label">Título de la Encuesta:</label>
+                        <input type="text" name="titulo_encuesta" id="id_titulo" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_prioridad" class="form-label">Prioridad:</label>
+                        <select name="prioridad" id="id_prioridad" class="form-select" required>
+                            <option value="">Seleccione prioridad</option>
+                            {% for key, value in prioridades %}
+                            <option value="{{ key }}">{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_departamento" class="form-label">Departamento:</label>
+                        <select name="id_departamento" id="id_departamento" class="form-select" required>
+                            <option value="">Seleccione departamento</option>
+                            {% for dep in departamentos %}
+                            <option value="{{ dep.id }}">{{ dep.nombre_departamento }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" id="tipo-incidencia-field">
+                        <label for="id_tipo_incidencia" class="form-label">Tipo Incidencia:</label>
+                        <select name="id_tipo_incidencia" id="id_tipo_incidencia" class="form-select" required>
+                            <option value="">Seleccione tipo de incidencia</option>
+                            {% for tipo in tipo_incidencias %}
+                            <option value="{{ tipo.id }}" data-departamento="{{ tipo.id_departamento.id }}">
+                                {{ tipo.nombre_incidencia }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_descripcion" class="form-label">Descripción del Incidente:</label>
+                    <textarea name="descripcion_incidente" id="id_descripcion" rows="4" class="form-control" required></textarea>
+                </div>
+
+                <hr class="form-divider">
+
+                <div class="form-group">
+                    <h2 class="form-subtitle">Preguntas</h2>
+                    <div id="preguntas-container">
+                        <div class="pregunta-item">
+                            <input type="text" name="preguntas[]" class="form-control" placeholder="Ingrese una pregunta" required>
+                            <button type="button" class="btn btn-sm btn-danger btn-eliminar" disabled>X</button>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-agregar" class="btn btn-sm btn-success" style="margin-top: 1rem;">Agregar Pregunta</button>
+                </div>
+                
+                <div class="action-buttons-footer">
+                    <a href="{% url 'main_encuesta' %}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Encuesta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos de Formulario */
+    .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color); }
+    .form-control,
+    .form-select { width: 100%; padding: 0.75rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 0.3rem; background-color: #FFFFFF; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .form-control:focus,
+    .form-select:focus { outline: none; border-color: var(--color-principal); box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2); }
+    textarea.form-control { min-height: 100px; }
+    .form-divider { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
+    .form-subtitle { color: var(--color-principal); font-size: 1.2rem; margin-bottom: 1rem; }
+
+    /* Estilos de Preguntas Dinámicas */
+    .pregunta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .pregunta-item input {
+        flex-grow: 1; /* El input toma todo el espacio disponible */
+    }
+
+    /* Botones */
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background-color: var(--color-principal); color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-success { background-color: var(--completado); color: white; }
+    .btn-danger { background-color: var(--error); color: white; }
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    .btn-eliminar { padding: 0.4rem 0.6rem; font-size: 0.8rem; line-height: 1; }
+    
+    .action-buttons-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; }
+
+    /* ----- Mensajes de Alerta ----- */
+    .messages-container { list-style: none; padding: 0; margin: 0 0 1rem 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.error {
+        color: #842029; background-color: #f8d7da; border-color: #f5c2c7;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAgregar = document.getElementById('btn-agregar');
+    const container = document.getElementById('preguntas-container');
+    const departamentoSelect = document.getElementById('id_departamento');
+    const tipoIncidenciaField = document.getElementById('tipo-incidencia-field');
+    const tipoIncidenciaSelect = document.getElementById('id_tipo_incidencia');
+    const tipoIncidenciaOptions = tipoIncidenciaSelect.querySelectorAll('option[data-departamento]');
+    
+    // Guardar el tipo de incidencia seleccionado actualmente
+    const tipoIncidenciaSeleccionado = tipoIncidenciaSelect.value;
+    
+    function actualizarIncidencias() {
+        const departamentoId = departamentoSelect.value;
+        
+        if (departamentoId) {
+            // Mostrar el campo de tipo de incidencia
+            tipoIncidenciaField.style.display = 'block';
+            
+            // Mostrar solo las incidencias del departamento seleccionado
+            tipoIncidenciaOptions.forEach(option => {
+                if (option.getAttribute('data-departamento') === departamentoId) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            // Verificar si el tipo de incidencia actualmente seleccionado pertenece al nuevo departamento
+            const opcionSeleccionada = tipoIncidenciaSelect.querySelector(`option[value="${tipoIncidenciaSeleccionado}"]`);
+            if (opcionSeleccionada && opcionSeleccionada.getAttribute('data-departamento') !== departamentoId) {
+                // Si no pertenece, limpiar la selección
+                tipoIncidenciaSelect.value = '';
+            }
+        } else {
+            // Si no hay departamento seleccionado, ocultar el campo de tipo de incidencia
+            tipoIncidenciaField.style.display = 'none';
+            tipoIncidenciaSelect.value = '';
+        }
+    }
+    
+    departamentoSelect.addEventListener('change', actualizarIncidencias);
+    
+    // Ejecutar al cargar la página para aplicar el filtro inicial
+    actualizarIncidencias();
+
+    // Funciones para manejar preguntas dinámicas
+    function actualizarBotonesEliminar() {
+        const botones = container.querySelectorAll('.btn-eliminar');
+        // Si solo queda una pregunta, deshabilitar su botón de eliminar
+        if (botones.length === 1) {
+            botones[0].disabled = true;
+        } else {
+            // Si hay más de una, habilitar todos los botones
+            botones.forEach(boton => boton.disabled = false);
+        }
+    }
+    
+    function agregarPregunta() {
+        const nuevaPregunta = document.createElement('div');
+        nuevaPregunta.className = 'pregunta-item';
+        nuevaPregunta.innerHTML = `
+            <input type="text" name="preguntas[]" class="form-control" placeholder="Ingrese una pregunta" required>
+            <button type="button" class="btn btn-sm btn-danger btn-eliminar">X</button>
+        `;
+        container.appendChild(nuevaPregunta);
+        actualizarBotonesEliminar();
+    }
+    
+    function eliminarPregunta(boton) {
+        boton.closest('.pregunta-item').remove();
+        actualizarBotonesEliminar();
+    }
+    
+    // Event listeners para preguntas
+    btnAgregar.addEventListener('click', agregarPregunta);
+    
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-eliminar')) {
+            eliminarPregunta(e.target);
+        }
+    });
+    
+    // Asegurar el estado inicial de los botones de eliminar
+    actualizarBotonesEliminar();
+});
+</script>
+{% endblock %}

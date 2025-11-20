@@ -1,0 +1,696 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1 style="color: var(--color-principal);">Detalle de la Encuesta</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Título:</span>
+                    <span class="detail-value">{{ encuesta_data.titulo_encuesta }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Solicitado por:</span>
+                    <span class="detail-value">{{ solicitud.creado_por }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Departamento:</span>
+                    <span class="detail-value">{{ encuesta_data.id_departamento.nombre_departamento }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Tipo de Incidencia:</span>
+                    <span class="detail-value">{{ encuesta_data.id_tipo_incidencia.nombre_incidencia }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prioridad:</span>
+                    <span class="detail-value">
+                        {% if encuesta_data.prioridad == 'alta' %}
+                            <span class="badge badge-danger">Alta</span>
+                        {% elif encuesta_data.prioridad == 'media' %}
+                            <span class="badge badge-warning">Media</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Baja</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Estado de solicitud:</span>
+                    <span class="detail-value">
+                        {% if solicitud.estado == 'abierta' %}
+                            <span class="badge badge-success">Abierta</span>
+                        {% elif solicitud.estado == 'derivada' %}
+                            <span class="badge badge-warning">Derivada</span>
+                        {% elif solicitud.estado == 'rechazada' %}
+                            <span class="badge badge-danger">Rechazada</span>
+                        {% else %}
+                            <span class="badge badge-success">Finalizada</span>
+                        {% endif %}
+                    </span>
+                </div>
+                {% if solicitud.estado != 'abierta' %}
+                <div class="detail-item">
+                    {% if solicitud.estado == 'finalizada' %}
+                    <span class="detail-label">Resuelta por la cuadrilla:</span>
+                    {% elif solicitud.estado != 'abierta' %}
+                    <span class="detail-label">Derivada a la cuadrilla:</span>
+                    {% endif %}
+                    <span class="detail-value">
+                        {{solicitud.cuadrilla_asignada}}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if solicitud.estado == 'rechazada' and solicitud.descripcion_rechazo %}
+            <hr class="form-divider">
+
+            <div class="rechazo-seccion">
+                <div class="rechazo-header">
+                    <div class="rechazo-icono">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h2 class="rechazo-title">Motivo del Rechazo</h2>
+                </div>
+                <div class="rechazo-content">
+                    <div class="rechazo-descripcion">
+                        {{ solicitud.descripcion_rechazo }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if solicitud.estado == 'abierta' or solicitud.estado == 'derivada'%}
+                {% if solicitud.descripcion_reabrir %}
+                <hr class="form-divider">
+
+                <div class="reabrir-seccion">
+                    <div class="reabrir-header">
+                        <div class="reabrir-icono">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h2 class="reabrir-title">Motivo de Reapertura</h2>
+                    </div>
+                    <div class="reabrir-content">
+                        <div class="reabrir-descripcion">
+                            {{ solicitud.descripcion_reabrir }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% if solicitud.estado == 'finalizada' and solicitud.descripcion_resolucion %}
+            <div class="resolucion-seccion">
+                <div class="resolucion-header">
+                    <div class="resolucion-icono">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 class="resolucion-title">Descripción de la Resolución</h2>
+                </div>
+                <div class="resolucion-content">
+                    <div class="resolucion-descripcion">
+                        {{ solicitud.descripcion_resolucion }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if solicitud.estado == 'finalizada' and archivos_resolucion %}
+            <hr class="form-divider">
+
+            <div class="archivos-resolucion-seccion">
+                <div class="resolucion-header">
+                    <div class="resolucion-icono">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 class="resolucion-title">Archivos de Resolución</h2>
+                </div>
+                
+                <div class="archivos-lista">
+                    {% for archivo in archivos_resolucion %}
+                        <div class="archivo-item">
+                            {% if archivo.tipo_contenido|slice:":5" == "image" %}
+                                <div class="archivo-preview-container">
+                                    <img src="{{ archivo.archivo.url }}" alt="{{ archivo.nombre_original }}" class="archivo-preview">
+                                </div>
+                            {% elif archivo.tipo_contenido|slice:":5" == "video" %}
+                                <div class="video-preview">
+                                    <video controls class="archivo-preview">
+                                        <source src="{{ archivo.archivo.url }}" type="{{ archivo.tipo_contenido }}">
+                                        Tu navegador no soporta la reproducción de video.
+                                    </video>
+                                </div>
+                            {% else %}
+                                <div class="archivo-icono">
+                                    <i class="file-icon">📄</i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="archivo-info">
+                                <div class="archivo-nombre" title="{{ archivo.nombre_original }}">
+                                    {{ archivo.nombre_original|truncatechars:30 }}
+                                </div>
+                                <div class="archivo-detalles">
+                                    <span class="archivo-tipo">{{ archivo.tipo_contenido }}</span>
+                                    <span class="archivo-tamaño">{{ archivo.tamaño|filesizeformat }}</span>
+                                </div>
+                                <div class="archivo-acciones">
+                                    <a href="{{ archivo.archivo.url }}" download class="btn btn-download">
+                                        Descargar
+                                    </a>
+                                    {% if archivo.tipo_contenido|slice:":5" == "image" or archivo.tipo_contenido|slice:":5" == "video" %}
+                                        <button type="button" class="btn btn-preview" onclick="abrirVistaPrevia('{{ archivo.archivo.url }}', '{{ archivo.tipo_contenido }}')">
+                                            Vista Previa
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <hr class="form-divider">
+
+            <div class="pregunta-seccion">
+                <h2 class="form-subtitle">Descripción del Incidente</h2>
+                <div class="descripcion-incidente">
+                    {{ encuesta_data.descripcion_incidente }}
+                </div>
+            </div>
+
+            <hr class="form-divider">
+
+            <div class="pregunta-seccion">
+                <h2 class="form-subtitle">Ubicacion</h2>
+                <div class="descripcion-incidente">
+                    {{ solicitud.ubicacion }}
+                </div>
+            </div>
+
+            <hr class="form-divider">
+
+            <div class="pregunta-seccion">
+                <h2 class="form-subtitle">Preguntas y Respuestas</h2>
+                {% if preguntas_con_respuestas %}
+                    <ol class="pregunta-list">
+                    {% for item in preguntas_con_respuestas %}
+                        <li class="pregunta-item">
+                            <div class="pregunta-texto">{{ item.pregunta.texto_pregunta }}</div>
+                            <div class="respuesta-texto">
+                                <strong>Respuesta:</strong> {{ item.respuesta.respuesta_texto }}
+                            </div>
+                        </li>
+                    {% endfor %}
+                    </ol>
+                {% else %}
+                    <p>No hay preguntas asignadas a esta encuesta.</p>
+                {% endif %}
+            </div>
+
+            <hr class="form-divider">
+
+            <div class="archivos-seccion">
+                <h2 class="form-subtitle">Archivos Adjuntos</h2>
+                {% if archivos_adjuntos %}
+                    <div class="archivos-lista">
+                        {% for archivo in archivos_adjuntos %}
+                            <div class="archivo-item">
+                                {% if archivo.tipo_contenido|slice:":5" == "image" %}
+                                    <div class="archivo-preview-container">
+                                        <img src="{{ archivo.archivo.url }}" alt="{{ archivo.nombre_original }}" class="archivo-preview">
+                                    </div>
+                                {% elif archivo.tipo_contenido|slice:":5" == "video" %}
+                                    <div class="video-preview">
+                                        <video controls class="archivo-preview">
+                                            <source src="{{ archivo.archivo.url }}" type="{{ archivo.tipo_contenido }}">
+                                            Tu navegador no soporta la reproducción de video.
+                                        </video>
+                                    </div>
+                                {% else %}
+                                    <div class="archivo-icono">
+                                        <i class="file-icon">📄</i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="archivo-info">
+                                    <div class="archivo-nombre" title="{{ archivo.nombre_original }}">
+                                        {{ archivo.nombre_original|truncatechars:30 }}
+                                    </div>
+                                    <div class="archivo-detalles">
+                                        <span class="archivo-tipo">{{ archivo.tipo_contenido }}</span>
+                                        <span class="archivo-tamaño">{{ archivo.tamaño|filesizeformat }}</span>
+                                    </div>
+                                    <div class="archivo-acciones">
+                                        <a href="{{ archivo.archivo.url }}" download class="btn btn-download">
+                                            Descargar
+                                        </a>
+                                        {% if archivo.tipo_contenido|slice:":5" == "image" or archivo.tipo_contenido|slice:":5" == "video" %}
+                                            <button type="button" class="btn btn-preview" onclick="abrirVistaPrevia('{{ archivo.archivo.url }}', '{{ archivo.tipo_contenido }}')">
+                                                Vista Previa
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No hay archivos adjuntos para esta encuesta.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    <div class="action-buttons-footer">
+        <a href="{% url 'dashboard_main' %}" class="btn btn-secondary">Volver al Listado</a>
+        {% if request.user.perfil.id == 5 and solicitud.estado == 'derivada' %}
+        <a href="{% url 'resolver_incidencia' solicitud.id %}" class="btn btn-resolver">Resolver Incidencia</a>
+        {% endif %}
+    </div>
+
+    <div id="modalVistaPrevia" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body">
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card { 
+        background: #FFFFFF; 
+        border-radius: 0.5rem; 
+        padding: 2rem; 
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+        border: 1px solid var(--border-color); 
+        margin-top: 1.5rem; 
+    }
+    
+    .detail-grid { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 1.5rem; 
+    }
+    .detail-item { 
+        display: flex; 
+        flex-direction: column; 
+    }
+    .detail-item.full-span { 
+        grid-column: 1 / -1; 
+    }
+    .detail-label { 
+        font-size: 0.9rem; 
+        font-weight: 500; 
+        color: #888; 
+        margin-bottom: 0.25rem; 
+    }
+    .detail-value { 
+        font-size: 1.1rem; 
+        color: var(--text-color); 
+    }
+
+    .form-divider { 
+        border: 0; 
+        border-top: 1px solid var(--border-color); 
+        margin: 2rem 0; 
+    }
+    .form-subtitle { 
+        color: var(--color-principal); 
+        font-size: 1.2rem; 
+        margin-bottom: 1rem; 
+    }
+
+    /* Sección de rechazo destacada */
+    .rechazo-seccion {
+        background-color: #fff8f8;
+        border: 2px solid var(--error);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .rechazo-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #ffcdd2;
+        padding-bottom: 0.75rem;
+    }
+    .rechazo-icono {
+        color: var(--error);
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .rechazo-title {
+        color: var(--error);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .rechazo-descripcion {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: #d32f2f;
+        background-color: #ffebee;
+        padding: 1.25rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--error);
+    }
+
+    /* Descripción del incidente */
+    .descripcion-incidente {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--color-principal);
+        font-size: 1.05rem;
+        line-height: 1.5;
+    }
+
+    /* Lista de Preguntas y Respuestas */
+    .pregunta-list {
+        margin-left: 0;
+        color: var(--text-color);
+        list-style: none;
+        padding: 0;
+    }
+    .pregunta-item {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .pregunta-item:last-child {
+        border-bottom: none;
+    }
+    .pregunta-texto {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--text-title-color);
+    }
+    .respuesta-texto {
+        font-size: 1.05rem;
+        line-height: 1.5;
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.3rem;
+    }
+
+    /* Archivos adjuntos */
+    .archivos-lista {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    .archivo-item {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .archivo-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .archivo-preview-container, .video-preview, .archivo-icono {
+        width: 100%;
+        height: 160px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 0.25rem;
+        background: #f8f9fa;
+    }
+    .archivo-preview {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    .file-icon {
+        font-size: 3rem;
+    }
+    .archivo-info {
+        width: 100%;
+    }
+    .archivo-nombre {
+        font-weight: 600;
+        color: var(--text-title-color);
+        margin-bottom: 0.5rem;
+        word-break: break-word;
+    }
+    .archivo-detalles {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+    .archivo-acciones {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .action-buttons-footer { 
+        margin-top: 1.5rem; 
+        text-align: center;
+    }
+    .btn { 
+        display: inline-block; 
+        padding: 0.6rem 1.25rem; 
+        font-size: 0.95rem; 
+        font-weight: 500; 
+        text-align: center; 
+        text-decoration: none; 
+        color: white; 
+        background-color: var(--color-principal); 
+        border: none; 
+        border-radius: 0.3rem; 
+        cursor: pointer; 
+        transition: opacity 0.2s ease; 
+    }
+    .btn:hover { 
+        opacity: 0.85; 
+    }
+    .btn-secondary { 
+        background-color: #6c757d; 
+        color: white; 
+    }
+    .btn-resolver {
+        background-color: var(--completado);
+    }
+    .btn-download {
+        background-color: var(--completado);
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    .btn-preview {
+        background-color: var(--color-principal);
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .badge { 
+        display: inline-block; 
+        padding: 0.3em 0.6em; 
+        font-size: 0.85rem; 
+        font-weight: 700; 
+        line-height: 1; 
+        text-align: center; 
+        white-space: nowrap; 
+        vertical-align: baseline; 
+        border-radius: 10rem; 
+    }
+    .badge-success { 
+        color: #fff; 
+        background-color: var(--completado); 
+    }
+    .badge-danger { 
+        color: #fff; 
+        background-color: var(--error); 
+    }
+    .badge-warning { 
+        color: var(--texto-principal); 
+        background-color: var(--advertencia); 
+    }
+    .badge-secondary { 
+        color: #fff; 
+        background-color: #6c757d; 
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+    }
+    .modal-content {
+        position: relative;
+        margin: 5% auto;
+        padding: 20px;
+        width: 80%;
+        max-width: 800px;
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 1001;
+    }
+    .close:hover {
+        color: #000;
+    }
+    .resolucion-seccion {
+        background-color: #f0f9ff;
+        border: 2px solid var(--completado);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .resolucion-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #b3e5fc;
+        padding-bottom: 0.75rem;
+    }
+    .resolucion-icono {
+        color: var(--completado);
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .resolucion-title {
+        color: var(--completado);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .resolucion-descripcion {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: var(--completado);
+        background-color: #e3f2fd;
+        padding: 1.25rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--completado);
+    }
+    .archivos-resolucion-seccion {
+        background-color: #f0f9ff;
+        border: 2px solid var(--completado);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .reabrir-seccion {
+        background-color: #fffbf0;
+        border: 2px solid var(--advertencia);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .reabrir-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #ffeaa7;
+        padding-bottom: 0.75rem;
+    }
+    .reabrir-icono {
+        color: var(--advertencia);
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .reabrir-title {
+        color: var(--advertencia);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .reabrir-descripcion {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: #e67e22;
+        background-color: #fff9e6;
+        padding: 1.25rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--advertencia);
+    }
+    #modal-body {
+        text-align: center;
+    }
+    #modal-body img, #modal-body video {
+        max-width: 100%;
+        max-height: 70vh;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Función para abrir vista previa de archivos
+    function abrirVistaPrevia(url, tipoContenido) {
+        const modal = document.getElementById('modalVistaPrevia');
+        const modalBody = document.getElementById('modal-body');
+        
+        modalBody.innerHTML = '';
+        
+        if (tipoContenido.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = 'Vista previa de imagen';
+            modalBody.appendChild(img);
+        } else if (tipoContenido.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = url;
+            video.controls = true;
+            video.style.maxWidth = '100%';
+            modalBody.appendChild(video);
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('modalVistaPrevia');
+        const closeBtn = document.querySelector('.close');
+        
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    });
+</script>
+{% endblock %}

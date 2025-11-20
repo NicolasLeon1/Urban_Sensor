@@ -1,245 +1,212 @@
-from django.contrib.auth.decorators import login_required
+from register.decorators import *
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from registration.models import Profile
-from usuarios.models import Usuario, Perfil
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from register.models import User, Perfiles, Profile
+from departamento.models import Departamento
+from direccion.models import Direccion
+import string
+import secrets
 
 # Vista principal - Listar usuarios
-@login_required
+@secpla_required
 def main_usuario(request):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id)
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tiene perfil asociado')
-        return redirect('check_profile')
-    
-    if profile.group_id == 1:  # Solo Admin
-        usuario_listado = Usuario.objects.filter(state='Activo').order_by('nombre')
-        return render(request, 'usuarios/main_usuario.html', {'usuario_listado': usuario_listado})
-    else:
-        messages.error(request, 'No tiene permisos para acceder a esta sección')
-        return redirect('main_admin')
+    usuario_listado = User.objects.order_by('nombre')
+    return render(request, 'usuarios/main_usuario.html', {'usuario_listado': usuario_listado})
 
-# Vista para mostrar formulario de crear usuario
-@login_required
-def usuario_crear(request):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id)
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tiene perfil asociado')
-        return redirect('check_profile')
-    
-    if profile.group_id == 1:
-        perfiles_listado = Perfil.PERFIL_CHOICES
-        return render(request, 'usuarios/usuario_crear.html', {'perfiles_listado': perfiles_listado})
-    else:
-        messages.error(request, 'No tiene permisos para acceder a esta sección')
-        return redirect('main_admin')
+@secpla_required
+def nuevo_usuario(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        perfil_seleccionado = request.POST.get('perfil')
+        
+        if nombre == '' or apellido == '' or email == '' or telefono == '' or perfil_seleccionado == '':
+            messages.error(request, 'Debe completar todos los campos')
+            return redirect('nuevo_usuario')
 
-# Vista para guardar usuario
-@login_required
-def usuario_guardar(request):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id)
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tiene perfil asociado')
-        return redirect('check_profile')
-    
-    if profile.group_id == 1:
-        if request.method == 'POST':
-            nombre = request.POST.get('nombre')
-            apellido = request.POST.get('apellido')
-            correo = request.POST.get('correo')
-            telefono = request.POST.get('telefono')
-            perfil_seleccionado = request.POST.get('perfil')
-            
-            if nombre == '' or apellido == '' or correo == '' or telefono == '' or perfil_seleccionado == '':
-                messages.error(request, 'Debe completar todos los campos')
-                return redirect('usuario_crear')
-            
-            # Verificar si el correo ya existe
-            if Usuario.objects.filter(correo=correo).exists():
-                messages.error(request, 'El correo ya está registrado')
-                return redirect('usuario_crear')
-            
-            try:
-                # Crear usuario de Django (auth_user)
-                from django.contrib.auth.models import User
-                user = User.objects.create_user(
-                    username=correo,
-                    email=correo,
-                    first_name=nombre,
-                    last_name=apellido
-                )
-                user.set_password('temporal123')  # Contraseña temporal
-                user.save()
-                
-                # Crear perfil asociado
-                perfil = Perfil.objects.create(
-                    id_usuario=user,
-                    nombre_perfil=perfil_seleccionado
-                )
-                
-                # Crear registro en tabla Usuario
-                usuario_save = Usuario(
-                    id_perfil=perfil,
-                    nombre=nombre,
-                    apellido=apellido,
-                    correo=correo,
-                    telefono=telefono
-                )
-                usuario_save.save()
-                
-                messages.success(request, 'Usuario creado correctamente')
-                return redirect('main_usuario')
-                
-            except Exception as e:
-                messages.error(request, f'Error al crear usuario: {str(e)}')
-                return redirect('usuario_crear')
-    else:
-        messages.error(request, 'No tiene permisos')
-        return redirect('main_admin')
+        if not User.is_email_valid(email):
+            messages.error(request, 'El email ya está registrado')
+            return redirect('nuevo_usuario')
+        
+        if not User.is_username_valid(username):
+            messages.error(request, 'El username ya está registrado')
+            return redirect('nuevo_usuario')
+        
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, 'El email no es valido')
+            return redirect('nuevo_usuario')
 
-# Vista para ver detalle de usuario
-@login_required
-def usuario_ver(request, usuario_id=None):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id)
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tiene perfil asociado')
-        return redirect('check_profile')
-    
-    if profile.group_id == 1:
-        usuario_count = Usuario.objects.filter(pk=usuario_id).count()
-        if usuario_count == 0:
-            messages.error(request, 'El usuario no existe')
+        try:
+            perfil = Profile.objects.get(pk=perfil_seleccionado)
+            user = User(
+                username=username,
+                nombre=nombre,
+                apellido=apellido,
+                email=email,
+                telefono=telefono,
+                perfil=perfil
+            )
+            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value or int(perfil_seleccionado) == Perfiles.CUADRILLA.value:
+                departamento_id = request.POST.get('departamento_especifico')
+                try:
+                    departamento = Departamento.objects.filter(activo=True).get(pk=departamento_id)
+                    user.departamento = departamento
+                except Departamento.DoesNotExist:
+                    messages.error(request, 'Departamento no existe')
+                    return redirect('nuevo_usuario')
+            elif int(perfil_seleccionado) == Perfiles.DIRECCION.value:
+                direccion_id = request.POST.get('direccion_especifica')
+                try:
+                    direccion = Direccion.objects.filter(activo=True).get(pk=direccion_id)
+                    user.direccion = direccion
+                except Direccion.DoesNotExist:
+                    messages.error(request, 'Departamento no existe')
+                    return redirect('nuevo_usuario')
+            
+            
+            characters = string.ascii_letters + string.digits + string.punctuation
+            temporary_password = ''.join(secrets.choice(characters) for _ in range(8))
+
+            send_mail(
+                subject="Se ha creado su usuario en la municipalidad!",
+                message=f"Se ha creado un nuevo usuario con la siguiente informacion:\nUsername:{username}\nContraseña Temporal:{temporary_password}\nAl momento de iniciar sesion, se le pedira confirmar sus datos.",
+                from_email='urban_sensor@municipalidad.cl',
+                recipient_list=[email],
+                fail_silently=False
+            )
+
+            user.set_password(temporary_password)
+            user.save()
+            messages.success(request, 'Usuario creado correctamente')
             return redirect('main_usuario')
-        
-        usuario_data = Usuario.objects.get(pk=usuario_id)
-        return render(request, 'usuarios/usuario_ver.html', {'usuario_data': usuario_data})
+            
+        except Exception as e:
+            messages.error(request, f'Error al crear usuario: {str(e)}')
+            return redirect('nuevo_usuario')
     else:
-        messages.error(request, 'No tiene permisos')
-        return redirect('main_admin')
+        perfiles_listado = Profile.objects.all()
+        direccion_listado = Direccion.objects.filter(activo=True)
+        departamento_listado = Departamento.objects.filter(activo=True)
+        context = {
+            'perfiles_listado': perfiles_listado,
+            'direccion_listado': direccion_listado,
+            'departamento_listado': departamento_listado
+        }
+        return render(request, 'usuarios/nuevo_usuario.html', context)
 
-# Vista para actualizar usuario
 @login_required
-def usuario_actualiza(request, usuario_id=None):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id)
-    except Profile.DoesNotExist:
-        messages.error(request, 'No tiene perfil asociado')
-        return redirect('check_profile')
-    
-    if profile.group_id == 1:
-        # Si es POST, actualizar
-        if request.method == 'POST':
-            id_usuario = request.POST.get('id_usuario')
-            nombre = request.POST.get('nombre')
-            apellido = request.POST.get('apellido')
-            correo = request.POST.get('correo')
-            telefono = request.POST.get('telefono')
-            perfil_seleccionado = request.POST.get('perfil')
-            
-            if nombre == '' or apellido == '' or correo == '' or telefono == '':
-                messages.error(request, 'Debe completar todos los campos')
-                return redirect('usuario_actualiza', usuario_id=id_usuario)
-            
-            try:
-                usuario = Usuario.objects.get(pk=id_usuario)
-                usuario.nombre = nombre
-                usuario.apellido = apellido
-                usuario.correo = correo
-                usuario.telefono = telefono
-                
-                # Actualizar perfil si cambió
-                if perfil_seleccionado != usuario.id_perfil.nombre_perfil:
-                    usuario.id_perfil.nombre_perfil = perfil_seleccionado
-                    usuario.id_perfil.save()
-                
-                usuario.save()
-                
-                messages.success(request, 'Usuario actualizado correctamente')
-                return redirect('main_usuario')
-                
-            except Exception as e:
-                messages.error(request, f'Error al actualizar: {str(e)}')
-                return redirect('usuario_actualiza', usuario_id=id_usuario)
+@secpla_required
+def editar_usuario(request, id):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        perfil_seleccionado = request.POST.get('perfil')
         
-        # Si es GET, mostrar formulario
+        if nombre == '' or apellido == '' or email == '' or telefono == '' or perfil_seleccionado == '':
+            messages.error(request, 'Debe completar todos los campos')
+            return redirect('editar_usuario', id)
+        
+        try:
+            perfil = Profile.objects.get(pk=perfil_seleccionado)
+            user = User.objects.get(pk=id)
+
+            if not User.is_email_valid(email) and user.email != email:
+                messages.error(request, 'El email ya está registrado')
+                return redirect('editar_usuario', id)
+            
+            if not User.is_username_valid(username) and user.username != username:
+                messages.error(request, 'El username ya está registrado')
+                return redirect('editar_usuario', id)
+            
+            user.username = username
+            user.nombre = nombre
+            user.apellido = apellido
+            user.email = email
+            user.telefono = telefono
+            user.perfil = perfil
+            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value or int(perfil_seleccionado) == Perfiles.CUADRILLA.value:
+                departamento_id = request.POST.get('departamento_especifico')
+                try:
+                    departamento = Departamento.objects.filter(activo=True).get(pk=departamento_id)
+                    user.departamento = departamento
+                except Departamento.DoesNotExist:
+                    messages.error(request, 'Departamento no existe')
+                    return redirect('editar_usuario', id)
+            elif int(perfil_seleccionado) == Perfiles.DIRECCION.value:
+                direccion_id = request.POST.get('direccion_especifica')
+                try:
+                    direccion = Direccion.objects.filter(activo=True).get(pk=direccion_id)
+                    user.direccion = direccion
+                except Direccion.DoesNotExist:
+                    messages.error(request, 'Departamento no existe')
+                    return redirect('editar_usuario', id)
+            user.save()
+            messages.success(request, 'Usuario creado correctamente')
+            return redirect('main_usuario')
+            
+        except Exception as e:
+            messages.error(request, f'Error al crear usuario: {str(e)}')
+            return redirect('editar_usuario', id)
+    else:
+        try:
+            usuario_data = User.objects.get(pk=id)
+        except User.DoesNotExist:
+            messages.error(request, 'Error el usuario no existe.')
+        perfiles_listado = Profile.objects.all()
+        direccion_listado = Direccion.objects.filter(activo=True)
+        departamento_listado = Departamento.objects.filter(activo=True)
+        context = {
+            'usuario_data': usuario_data,
+            'perfiles_listado': perfiles_listado,
+            'direccion_listado': direccion_listado,
+            'departamento_listado': departamento_listado
+        }
+        return render(request, 'usuarios/editar_usuario.html', context)
+
+@secpla_required
+def ver_usuario(request, id):
+    try:
+        usuario_data = User.objects.get(pk=id)
+    except User.DoesNotExist:
+        messages.error(request, 'Error el usuario no existe.')
+    return render(request, 'usuarios/ver_usuario.html', {'usuario_data': usuario_data})
+
+@secpla_required
+def toggle_usuario(request, id):
+    try:
+        usuario_data = User.objects.get(pk=id)
+        usuario_data.activo = not usuario_data.activo
+        if usuario_data.activo:
+            messages.success(request, 'Usuario activado con exito')
         else:
-            usuario_count = Usuario.objects.filter(pk=usuario_id).count()
-            if usuario_count == 0:
-                messages.error(request, 'El usuario no existe')
-                return redirect('main_usuario')
-            
-            usuario_data = Usuario.objects.get(pk=usuario_id)
-            perfiles_listado = Perfil.PERFIL_CHOICES
-            return render(request, 'usuarios/usuario_actualiza.html', {
-                'usuario_data': usuario_data,
-                'perfiles_listado': perfiles_listado
-            })
-    else:
-        messages.error(request, 'No tiene permisos')
-        return redirect('main_admin')
+            messages.success(request, 'Usuario bloqueado con exito')
+        usuario_data.save()
+        return redirect('main_usuario')
+    except User.DoesNotExist:
+        messages.error(request, 'Error el usuario no existe.')
+    return render(request, 'usuarios/ver_usuario.html', {'usuario_data': usuario_data})
 
-
-
-@login_required
-def usuario_bloquea(request, usuario_id):
-    
+@secpla_required
+def eliminar_usuario(request, id):
     try:
-        current_user_profile = Profile.objects.get(user=request.user)
-        if current_user_profile.group.name != 'Admin':
-            messages.error(request, 'No tienes permisos para realizar esta acción.')
-            return redirect('home')
-    except Profile.DoesNotExist:
-        messages.error(request, 'Tu perfil no está configurado.')
-        return redirect('logout')
-
-    try:
-        # CAMBIA ESTA LÍNEA
-        Usuario.objects.filter(pk=usuario_id).update(state='Bloqueado')
-        messages.success(request, 'Usuario bloqueado correctamente.')
-    except Exception as e:
-        messages.error(request, f'Error al bloquear el usuario: {e}')
-    
-    return redirect('main_usuario')
-
-
-
-@login_required
-def main_usuario_bloqueado(request):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id) 
-    except Profile.DoesNotExist:
-        messages.add_message(request, messages.INFO, 'Hubo un error de perfil')
-        return redirect('login')
-
-    if profile.group_id == 1: 
-   
-        usuarios_bloqueados = Usuario.objects.filter(state='Bloqueado').order_by('nombre')
-        
-        template_name = 'usuarios/main_usuario_bloqueado.html'
-        # Envía la lista de Usuarios, no de Profiles
-        return render(request, template_name, {'usuario_listado': usuarios_bloqueados})
-    else:
-        return redirect('logout')
-
-
-
-@login_required
-def usuario_desbloquea(request, usuario_id):
-    try:
-        profile = Profile.objects.get(user_id=request.user.id) 
-    except Profile.DoesNotExist:
-        messages.add_message(request, messages.INFO, 'Hubo un error de perfil')
-        return redirect('logout')
-
-    if profile.group_id == 1:
-     
-        Usuario.objects.filter(pk=usuario_id).update(state='Activo')
-        
-        messages.add_message(request, messages.INFO, 'Usuario desbloqueado')
-        return redirect('main_usuario_bloqueado')
-    else:
-        return redirect('logout')
+        usuario_data = User.objects.get(pk=id)
+        if usuario_data.activo:
+            messages.error(request, 'Error el usuario debe estar bloqueado para poder borrarlo.')
+            return redirect('main_usuario')
+        usuario_data.delete()
+        messages.success(request, 'Usuario eliminado con exito')
+        return redirect('main_usuario')
+    except User.DoesNotExist:
+        messages.error(request, 'Error el usuario no existe.')
+    return render(request, 'usuarios/ver_usuario.html', {'usuario_data': usuario_data})
