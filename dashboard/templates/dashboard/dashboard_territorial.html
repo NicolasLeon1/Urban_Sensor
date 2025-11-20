@@ -25,6 +25,8 @@
 
 {% block content %}
     <h1 style="color: var(--color-principal);">Dashboard Territorial</h1>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user }}.</p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Perfil: <strong>{{ user.perfil }}</strong></p>
 
     <div class="dashboard-stats">
         <div class="stat-card" style="border-color: #17a2b8;">
@@ -83,7 +85,8 @@
                 <thead>
                     <tr>
                         <th># Reporte</th>
-                        <th>Encuesta</th>
+                        <th>Titulo Encuesta</th>
+                        <th>Tipo Encuesta</th>
                         <th>Fecha Creación</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -94,17 +97,22 @@
                     <tr>
                         <td>#{{ reporte.id }}</td>
                         <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
                         <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
                         <td>
                             <span class="badge badge-info">Abierta</span>
                         </td>
                         <td>
-                            <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Detalle</a>
+                                <a href="{% url 'editar_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Editar</a>
+                                <a href="{% url 'cancelar_incidencia' reporte.id %}" class="btn btn-sm btn-danger">Cancelar</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align: center;">No has creado reportes abiertos.</td>
+                        <td colspan="6" style="text-align: center;">No has creado reportes abiertos.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -118,18 +126,35 @@
         </div>
         <div class="table-container">
             <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Encuesta</th>
+                        <th>Tipo Encuesta</th>
+                        <th>Fecha Creación</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% for reporte in listado_derivadas %}
                     <tr>
                         <td>#{{ reporte.id }}</td>
                         <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
                         <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
-                        <td><span class="badge badge-warning">Derivada</span></td>
-                        <td><a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a></td>
+                        <td>
+                            <span class="badge badge-warning">Derivada</span>
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Detalle</a>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align: center;">No tienes reportes derivados.</td>
+                        <td colspan="6" style="text-align: center;">No tienes reportes derivados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -143,18 +168,36 @@
         </div>
         <div class="table-container">
             <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Encuesta</th>
+                        <th>Tipo Encuesta</th>
+                        <th>Fecha Creación</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% for reporte in listado_rechazadas %}
                     <tr>
                         <td>#{{ reporte.id }}</td>
                         <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
                         <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
-                        <td><span class="badge badge-danger">Rechazada</span></td>
-                        <td><a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a></td>
+                        <td>
+                            <span class="badge badge-danger">Rechazada</span>
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Detalle</a>
+                                <a href="{% url 'editar_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Editar</a>
+                                <a href="{% url 'cancelar_incidencia' reporte.id %}" class="btn btn-sm btn-danger">Cancelar</a>
+                            </div>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align: center;">No tienes reportes rechazados.</td>
+                        <td colspan="6" style="text-align: center;">No tienes reportes rechazados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -168,22 +211,59 @@
         </div>
         <div class="table-container">
             <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Encuesta</th>
+                        <th>Tipo Encuesta</th>
+                        <th>Fecha Creación</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {% for reporte in listado_finalizadas %}
                     <tr>
                         <td>#{{ reporte.id }}</td>
                         <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
                         <td>{{ reporte.creado|date:"d/m/Y H:i" }}</td>
-                        <td><span class="badge badge-success">Finalizada</span></td>
-                        <td><a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Ver</a></td>
+                        <td>
+                            <span class="badge badge-success">Finalizada</span>
+                        </td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Detalle</a>
+                                <button class="btn btn-sm btn-warning btn-reabrir" data-reporte-id="{{ reporte.id }}" data-reporte-titulo="{{ reporte.encuesta_base.titulo_encuesta }}">Reabrir</button>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align: center;">No tienes reportes finalizados.</td>
+                        <td colspan="6" style="text-align: center;">No tienes reportes finalizados.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+    
+    <div id="modalReabrir" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 style="color: var(--advertencia); margin-bottom: 1.5rem;">Reabrir Incidencia</h2>
+            <p id="modal-titulo-reabrir" style="margin-bottom: 1rem; font-weight: 500;"></p>
+            <form id="form-reabrir" method="POST" action="">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="motivo_reapertura" class="form-label">Motivo de la Reapertura:</label>
+                    <textarea id="motivo_reapertura" name="motivo_reapertura" class="form-textarea" rows="5" required placeholder="Describa el motivo por el cual necesita reabrir esta incidencia..."></textarea>
+                </div>
+                <div class="form-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancelar-reabrir">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Confirmar Reapertura</button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -192,23 +272,18 @@
     {{ stats|json_script:"chartData" }}
 
     <script>
-        // Esperar a que la página cargue
         document.addEventListener("DOMContentLoaded", () => {
             
-            // Obtener los datos del JSON script que creó Django
             const statsData = JSON.parse(document.getElementById('chartData').textContent);
 
-            // Obtener el 'canvas' (lienzo) donde dibujaremos
             const ctx = document.getElementById('incidenciasChart').getContext('2d');
 
-            // Configurar y crear el gráfico
             new Chart(ctx, {
-                type: 'doughnut', // Tipo de gráfico (dona)
+                type: 'doughnut',
                 data: {
                     labels: ['Abiertas', 'Derivadas', 'Rechazadas', 'Finalizadas'],
                     datasets: [{
                         label: 'Incidencias',
-                        // Usamos los datos del diccionario 'stats'
                         data: [
                             statsData.abierta,
                             statsData.derivada,
@@ -216,26 +291,68 @@
                             statsData.finalizada
                         ],
                         backgroundColor: [
-                            '#17a2b8',    // Color Abiertas (azul-info)
-                            '#ffc107',    // Color Derivadas (amarillo-advertencia)
-                            '#dc3545',    // Color Rechazadas (rojo-error)
-                            '#28a745'     // Color Finalizadas (verde-completado)
+                            '#17a2b8',
+                            '#ffc107',
+                            '#dc3545',
+                            '#28a745'
                         ],
-                        borderColor: '#FFFFFF', // Borde blanco entre segmentos
+                        borderColor: '#FFFFFF',
                         borderWidth: 3
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Permite que se ajuste al 'max-height' del div
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'right', // Mover la leyenda a la derecha
+                            position: 'right',
                         },
                         title: {
-                            display: false, // Ocultamos el título (ya está en el card-header)
+                            display: false,
                         }
                     }
+                }
+            });
+
+            const modalReabrir = document.getElementById('modalReabrir');
+            const closeBtnReabrir = modalReabrir.querySelector('.close');
+            const cancelBtnReabrir = document.getElementById('btn-cancelar-reabrir');
+            const formReabrir = document.getElementById('form-reabrir');
+            const modalTituloReabrir = document.getElementById('modal-titulo-reabrir');
+            const reaperturaText = document.getElementById('motivo_reapertura');
+            
+            document.querySelectorAll('.btn-reabrir').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const reporteId = this.getAttribute('data-reporte-id');
+                    const reporteTitulo = this.getAttribute('data-reporte-titulo');
+                    
+                    modalTituloReabrir.textContent = `¿Está seguro que desea reabrir la incidencia "${reporteTitulo}"?`;
+                    reaperturaText.value = '';
+                    formReabrir.action = "{% url 'reabrir_incidencia' 0 %}".replace('0', reporteId);
+                    modalReabrir.style.display = 'block';
+                });
+            });
+            
+            function cerrarModalReabrir() {
+                modalReabrir.style.display = 'none';
+                formReabrir.reset();
+            }
+            
+            closeBtnReabrir.onclick = cerrarModalReabrir;
+            cancelBtnReabrir.onclick = cerrarModalReabrir;
+            
+            window.onclick = function(event) {
+                if (event.target == modalReabrir) {
+                    cerrarModalReabrir();
+                }
+            }
+            
+            formReabrir.addEventListener('submit', function(e) {
+                const motivo = document.getElementById('motivo_reapertura').value.trim();
+                if (!motivo) {
+                    e.preventDefault();
+                    alert('Por favor, ingrese el motivo de la reapertura.');
+                    return false;
                 }
             });
         });
@@ -269,6 +386,8 @@
     .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
     .btn-info { background-color: #17a2b8; }
     .btn-primary { background-color: var(--color-principal); }
+    .btn-danger { background-color: var(--error); color: white; }
+    .btn-warning { background-color: var(--advertencia); color: black; }
 
     .table-container { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; }
@@ -287,5 +406,63 @@
     .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
     .message.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
     .message.error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+
+    /* Estilos para el modal de reapertura */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+        position: relative;
+        margin: 10% auto;
+        padding: 2rem;
+        width: 90%;
+        max-width: 600px;
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover {
+        color: #000;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-title-color);
+    }
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.3rem;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: vertical;
+        transition: border-color 0.2s ease;
+    }
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--color-principal);
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
 </style>
 {% endblock %}

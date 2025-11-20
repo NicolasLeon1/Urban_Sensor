@@ -7,9 +7,13 @@
     <div class="card">
         <div class="card-body">
             <div class="detail-grid">
-                <div class="detail-item full-span">
+                <div class="detail-item">
                     <span class="detail-label">Título:</span>
                     <span class="detail-value">{{ encuesta_data.titulo_encuesta }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Solicitado por:</span>
+                    <span class="detail-value">{{ solicitud.creado_por }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Departamento:</span>
@@ -32,16 +36,141 @@
                     </span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Estado:</span>
+                    <span class="detail-label">Estado de solicitud:</span>
                     <span class="detail-value">
-                        {% if encuesta_data.activo %}
-                            <span class="badge badge-success">Activo</span>
+                        {% if solicitud.estado == 'abierta' %}
+                            <span class="badge badge-success">Abierta</span>
+                        {% elif solicitud.estado == 'derivada' %}
+                            <span class="badge badge-warning">Derivada</span>
+                        {% elif solicitud.estado == 'rechazada' %}
+                            <span class="badge badge-danger">Rechazada</span>
                         {% else %}
-                            <span class="badge badge-danger">Bloqueado</span>
+                            <span class="badge badge-success">Finalizada</span>
                         {% endif %}
                     </span>
                 </div>
+                {% if solicitud.estado != 'abierta' %}
+                <div class="detail-item">
+                    {% if solicitud.estado == 'finalizada' %}
+                    <span class="detail-label">Resuelta por la cuadrilla:</span>
+                    {% elif solicitud.estado != 'abierta' %}
+                    <span class="detail-label">Derivada a la cuadrilla:</span>
+                    {% endif %}
+                    <span class="detail-value">
+                        {{solicitud.cuadrilla_asignada}}
+                    </span>
+                </div>
+                {% endif %}
             </div>
+
+            {% if solicitud.estado == 'rechazada' and solicitud.descripcion_rechazo %}
+            <hr class="form-divider">
+
+            <div class="rechazo-seccion">
+                <div class="rechazo-header">
+                    <div class="rechazo-icono">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h2 class="rechazo-title">Motivo del Rechazo</h2>
+                </div>
+                <div class="rechazo-content">
+                    <div class="rechazo-descripcion">
+                        {{ solicitud.descripcion_rechazo }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if solicitud.estado == 'abierta' or solicitud.estado == 'derivada'%}
+                {% if solicitud.descripcion_reabrir %}
+                <hr class="form-divider">
+
+                <div class="reabrir-seccion">
+                    <div class="reabrir-header">
+                        <div class="reabrir-icono">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h2 class="reabrir-title">Motivo de Reapertura</h2>
+                    </div>
+                    <div class="reabrir-content">
+                        <div class="reabrir-descripcion">
+                            {{ solicitud.descripcion_reabrir }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            {% if solicitud.estado == 'finalizada' and solicitud.descripcion_resolucion %}
+            <div class="resolucion-seccion">
+                <div class="resolucion-header">
+                    <div class="resolucion-icono">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 class="resolucion-title">Descripción de la Resolución</h2>
+                </div>
+                <div class="resolucion-content">
+                    <div class="resolucion-descripcion">
+                        {{ solicitud.descripcion_resolucion }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if solicitud.estado == 'finalizada' and archivos_resolucion %}
+            <hr class="form-divider">
+
+            <div class="archivos-resolucion-seccion">
+                <div class="resolucion-header">
+                    <div class="resolucion-icono">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2 class="resolucion-title">Archivos de Resolución</h2>
+                </div>
+                
+                <div class="archivos-lista">
+                    {% for archivo in archivos_resolucion %}
+                        <div class="archivo-item">
+                            {% if archivo.tipo_contenido|slice:":5" == "image" %}
+                                <div class="archivo-preview-container">
+                                    <img src="{{ archivo.archivo.url }}" alt="{{ archivo.nombre_original }}" class="archivo-preview">
+                                </div>
+                            {% elif archivo.tipo_contenido|slice:":5" == "video" %}
+                                <div class="video-preview">
+                                    <video controls class="archivo-preview">
+                                        <source src="{{ archivo.archivo.url }}" type="{{ archivo.tipo_contenido }}">
+                                        Tu navegador no soporta la reproducción de video.
+                                    </video>
+                                </div>
+                            {% else %}
+                                <div class="archivo-icono">
+                                    <i class="file-icon">📄</i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="archivo-info">
+                                <div class="archivo-nombre" title="{{ archivo.nombre_original }}">
+                                    {{ archivo.nombre_original|truncatechars:30 }}
+                                </div>
+                                <div class="archivo-detalles">
+                                    <span class="archivo-tipo">{{ archivo.tipo_contenido }}</span>
+                                    <span class="archivo-tamaño">{{ archivo.tamaño|filesizeformat }}</span>
+                                </div>
+                                <div class="archivo-acciones">
+                                    <a href="{{ archivo.archivo.url }}" download class="btn btn-download">
+                                        Descargar
+                                    </a>
+                                    {% if archivo.tipo_contenido|slice:":5" == "image" or archivo.tipo_contenido|slice:":5" == "video" %}
+                                        <button type="button" class="btn btn-preview" onclick="abrirVistaPrevia('{{ archivo.archivo.url }}', '{{ archivo.tipo_contenido }}')">
+                                            Vista Previa
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <hr class="form-divider">
 
@@ -49,6 +178,15 @@
                 <h2 class="form-subtitle">Descripción del Incidente</h2>
                 <div class="descripcion-incidente">
                     {{ encuesta_data.descripcion_incidente }}
+                </div>
+            </div>
+
+            <hr class="form-divider">
+
+            <div class="pregunta-seccion">
+                <h2 class="form-subtitle">Ubicacion</h2>
+                <div class="descripcion-incidente">
+                    {{ solicitud.ubicacion }}
                 </div>
             </div>
 
@@ -129,14 +267,15 @@
 
     <div class="action-buttons-footer">
         <a href="{% url 'dashboard_main' %}" class="btn btn-secondary">Volver al Listado</a>
+        {% if request.user.perfil.id == 5 and solicitud.estado == 'derivada' %}
+        <a href="{% url 'resolver_incidencia' solicitud.id %}" class="btn btn-resolver">Resolver Incidencia</a>
+        {% endif %}
     </div>
 
-    <!-- Modal para vista previa de archivos -->
     <div id="modalVistaPrevia" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="modal-body">
-                <!-- Contenido de la vista previa se insertará aquí -->
             </div>
         </div>
     </div>
@@ -186,6 +325,43 @@
         color: var(--color-principal); 
         font-size: 1.2rem; 
         margin-bottom: 1rem; 
+    }
+
+    /* Sección de rechazo destacada */
+    .rechazo-seccion {
+        background-color: #fff8f8;
+        border: 2px solid var(--error);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .rechazo-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #ffcdd2;
+        padding-bottom: 0.75rem;
+    }
+    .rechazo-icono {
+        color: var(--error);
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .rechazo-title {
+        color: var(--error);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .rechazo-descripcion {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: #d32f2f;
+        background-color: #ffebee;
+        padding: 1.25rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--error);
     }
 
     /* Descripción del incidente */
@@ -289,7 +465,6 @@
         justify-content: center;
     }
 
-    /* Botones */
     .action-buttons-footer { 
         margin-top: 1.5rem; 
         text-align: center;
@@ -315,6 +490,9 @@
         background-color: #6c757d; 
         color: white; 
     }
+    .btn-resolver {
+        background-color: var(--completado);
+    }
     .btn-download {
         background-color: var(--completado);
         padding: 0.4rem 0.8rem;
@@ -326,7 +504,6 @@
         font-size: 0.85rem;
     }
 
-    /* Badges */
     .badge { 
         display: inline-block; 
         padding: 0.3em 0.6em; 
@@ -355,7 +532,6 @@
         background-color: #6c757d; 
     }
 
-    /* Modal para vista previa */
     .modal {
         display: none;
         position: fixed;
@@ -388,6 +564,84 @@
     }
     .close:hover {
         color: #000;
+    }
+    .resolucion-seccion {
+        background-color: #f0f9ff;
+        border: 2px solid var(--completado);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .resolucion-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #b3e5fc;
+        padding-bottom: 0.75rem;
+    }
+    .resolucion-icono {
+        color: var(--completado);
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .resolucion-title {
+        color: var(--completado);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .resolucion-descripcion {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: var(--completado);
+        background-color: #e3f2fd;
+        padding: 1.25rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--completado);
+    }
+    .archivos-resolucion-seccion {
+        background-color: #f0f9ff;
+        border: 2px solid var(--completado);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .reabrir-seccion {
+        background-color: #fffbf0;
+        border: 2px solid var(--advertencia);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .reabrir-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #ffeaa7;
+        padding-bottom: 0.75rem;
+    }
+    .reabrir-icono {
+        color: var(--advertencia);
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .reabrir-title {
+        color: var(--advertencia);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .reabrir-descripcion {
+        font-size: 1.15rem;
+        line-height: 1.6;
+        color: #e67e22;
+        background-color: #fff9e6;
+        padding: 1.25rem;
+        border-radius: 0.3rem;
+        border-left: 4px solid var(--advertencia);
     }
     #modal-body {
         text-align: center;
@@ -424,7 +678,6 @@
         modal.style.display = 'block';
     }
 
-    // Cerrar modal al hacer clic en la X
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('modalVistaPrevia');
         const closeBtn = document.querySelector('.close');
@@ -433,7 +686,6 @@
             modal.style.display = 'none';
         }
         
-        // Cerrar modal al hacer clic fuera del contenido
         window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = 'none';

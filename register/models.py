@@ -102,3 +102,6 @@ class User(models.Model):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
         ordering = ['created']
+
+    def __str__(self):
+        return f'{self.nombre} {self.apellido}'
