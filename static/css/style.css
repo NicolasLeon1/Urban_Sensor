@@ -149,7 +149,7 @@ header{
 
 .sidebar {
     margin-top: 3.5rem;
-    width: 18.75rem; /* <-- CAMBIA AL ANCHO EXPANDIDO */
+    width: 4rem;
     height: 100%;
     position: fixed;
     top: 0;
@@ -159,10 +159,12 @@ header{
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
     background-color: var(--background-color);
-    /* Se eliminó la transición */
+    transition: width 0.5s ease;
 }
 
-
+.sidebar.menu-toggle {
+    width: 18.75rem;
+}
 
 .sidebar a {
     display: flex;
@@ -193,8 +195,11 @@ header{
 
 main {
     margin-top: 3rem;
-    margin-left: 18.75rem;
+    margin-left: 4rem;
     padding: 2rem;
     transition: padding-left 0.5s ease;
 }
 
+main.menu-toggle {
+    padding-left: 18.75rem;
+}

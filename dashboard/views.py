@@ -1,9 +1,7 @@
 from django.shortcuts import render, redirect
 from register.decorators import *
 from register.utils import *
-
-# --- IMPORTS AÑADIDOS ---
-from incidencia.models import SolicitudIncidencia # Importar el nuevo modelo de solicitud
+from incidencia.models import SolicitudIncidencia
 from register.models import User, Perfiles
 from django.db.models import Count
 
@@ -23,10 +21,8 @@ def to_dashboard(request):
 
 @secpla_required
 def dashboard_admin(request):
-    # Requerimiento: Cantidad de usuarios disponibles
     num_usuarios = User.objects.filter(activo=True).count()
     
-    # Requerimiento: Cantidad de incidencias (Solicitudes) por estado
     solicitudes_counts = SolicitudIncidencia.objects.values('estado').annotate(total=Count('estado'))
     stats = {s['estado']: s['total'] for s in solicitudes_counts}
 
@@ -42,25 +38,28 @@ def dashboard_admin(request):
 
 @departamento_required
 def dashboard_departamento(request):
-    # Requerimiento: Ver incidencias asignadas a su departamento y su estado
-    # Asume que el usuario de Depto tiene un campo 'departamento'
     solicitudes_depto = SolicitudIncidencia.objects.filter(
         departamento_asignado=request.user.departamento
     ).order_by('-actualizado')
     
-    # Requerimiento: Puede derivar una incidencia a una cuadrilla
-    # Filtramos las que están 'abiertas' para que el depto las derive
     solicitudes_pendientes = solicitudes_depto.filter(estado='abierta')
     solicitudes_derivadas = solicitudes_depto.filter(estado='derivada')
+    solicitudes_rechazadas = solicitudes_depto.filter(estado='rechazada')
     solicitudes_finalizadas = solicitudes_depto.filter(estado='finalizada')
 
-    cuadrillas = User.objects.filter(perfil=Perfiles.CUADRILLA.value)
+    cuadrillas = User.objects.filter(
+        perfil=Perfiles.CUADRILLA.value,
+        departamento=request.user.departamento
+    )
     
     context = {
-        'solicitudes_listado': solicitudes_depto,
         'solicitudes_pendientes': solicitudes_pendientes,
+        'solicitudes_derivadas': solicitudes_derivadas,
+        'solicitudes_rechazadas': solicitudes_rechazadas,
+        'solicitudes_finalizadas': solicitudes_finalizadas,
         'conteo_abiertas': solicitudes_pendientes.count(),
         'conteo_derivadas': solicitudes_derivadas.count(),
+        'conteo_rechazadas': solicitudes_rechazadas.count(),
         'conteo_finalizadas': solicitudes_finalizadas.count(),
         'cuadrillas_departamento': cuadrillas
     }
@@ -68,8 +67,6 @@ def dashboard_departamento(request):
 
 @direccion_required
 def dashboard_direccion(request):
-    # Requerimiento: Ver las incidencias asignadas a su dirección y su estado
-    # Asume que el usuario de Dirección tiene un campo 'direccion'
     solicitudes_dir = SolicitudIncidencia.objects.filter(
         direccion_asignada=request.user.direccion
     ).order_by('estado', '-actualizado')
@@ -88,7 +85,6 @@ def dashboard_direccion(request):
 
 @territorial_required
 def dashboard_territorial(request):
-    # Requerimiento: Ver sus incidencias creadas por estado + stats
     solicitudes_creadas = SolicitudIncidencia.objects.filter(
         creado_por=request.user
     )
@@ -114,14 +110,17 @@ def dashboard_territorial(request):
 
 @cuadrilla_required
 def dashboard_cuadrilla(request):
-    # Requerimiento: Ver incidencias (solicitudes) asignadas
-    # Solo mostrar las que están 'derivadas' (pendientes de resolver)
-    solicitudes_asignadas = SolicitudIncidencia.objects.filter(
-        cuadrilla_asignada=request.user,
-        estado='derivada' 
+    incidencias_asignadas = SolicitudIncidencia.objects.filter(
+        cuadrilla_asignada=request.user
     ).order_by('actualizado')
+
+    incidencias_derivadas = incidencias_asignadas.filter(estado='derivada')
+    incidencias_finalizadas = incidencias_asignadas.filter(estado='finalizada')
     
     context = {
-        'tareas_pendientes': solicitudes_asignadas
+        'incidencias_asignadas': incidencias_derivadas,
+        'incidencias_finalizadas': incidencias_finalizadas,
+        'conteo_asignadas': incidencias_derivadas.count(),
+        'conteo_finalizadas': incidencias_finalizadas.count(),
     }
     return render(request, 'dashboard/dashboard_cuadrilla.html', context)

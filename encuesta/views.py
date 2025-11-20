@@ -1,17 +1,10 @@
 from register.decorators import *
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.http import JsonResponse
-from register.models import Profile
 from .models import Encuesta, Pregunta, ArchivoSolicitud
 from departamento.models import Departamento
-from incidencia.models import TipoIncidencia
-
-# --- IMPORTS AÑADIDOS ---
-from register.decorators import territorial_required
-# Usar la importación de string para romper el ciclo en las VISTAS también es una buena práctica
-from incidencia.models import SolicitudIncidencia, RespuestaSolicitud
-from django.db import transaction # Para asegurar que la solicitud y sus respuestas se creen juntas
+from incidencia.models import TipoIncidencia, SolicitudIncidencia, RespuestaSolicitud
+from django.db import transaction
 
 @secpla_required
 def main_encuesta(request):
@@ -191,15 +184,8 @@ def eliminar_encuesta(request, id):
         messages.error(request, 'La encuesta no existe')
         return redirect('main_encuesta')
 
-# --- NUEVAS VISTAS PARA PERFIL TERRITORIAL ---
-
 @territorial_required
 def listar_encuestas_responder(request):
-    """
-    Muestra al usuario Territorial la lista de Encuestas (plantillas)
-    activas que puede utilizar para crear una nueva Solicitud de Incidencia.
-    (Requerimiento: Territorial ... eligiendo la encuesta adecuada)
-    """
     encuestas_activas = Encuesta.objects.filter(activo=True).select_related(
         'id_tipo_incidencia', 
         'id_departamento'
@@ -212,12 +198,7 @@ def listar_encuestas_responder(request):
 @territorial_required
 @transaction.atomic
 def responder_encuesta(request, id_encuesta):
-    """
-    Permite al usuario Territorial rellenar las preguntas de una Encuesta
-    para crear una nueva SolicitudIncidencia.
-    """
     try:
-        # Optimizar consulta cargando preguntas relacionadas
         encuesta = Encuesta.objects.prefetch_related('pregunta_set').get(pk=id_encuesta, activo=True)
     except Encuesta.DoesNotExist:
         messages.error(request, 'La encuesta seleccionada no existe o no está activa.')
@@ -225,7 +206,6 @@ def responder_encuesta(request, id_encuesta):
 
     if request.method == 'POST':
         try:
-            # 1. Crear la SolicitudIncidencia (el "ticket")
             tipo_incidencia = encuesta.id_tipo_incidencia
             ubicacion = request.POST.get('ubicacion')
             
@@ -238,7 +218,6 @@ def responder_encuesta(request, id_encuesta):
                 departamento_asignado=tipo_incidencia.id_departamento
             )
             
-            # 2. Recorrer las preguntas de la plantilla y guardar las respuestas
             preguntas = encuesta.pregunta_set.all()
             respuestas_a_crear = []
             
@@ -256,7 +235,6 @@ def responder_encuesta(request, id_encuesta):
                     )
                 )
             
-            # 3. Guardar todas las respuestas en la base de datos
             RespuestaSolicitud.objects.bulk_create(respuestas_a_crear)
             
             archivos = request.FILES.getlist('archivos')
@@ -305,14 +283,13 @@ def responder_encuesta(request, id_encuesta):
             return redirect('responder_encuesta', id_encuesta=id_encuesta)
 
     else:
-        # Método GET: Mostrar el formulario con las preguntas
         preguntas = encuesta.pregunta_set.all()
         return render(request, 'encuesta/responder_encuesta.html', {
             'encuesta_data': encuesta,
             'preguntas': preguntas
         })
 
-@check_perfil(Perfiles.TERRITORIAL, Perfiles.DEPARTAMENTO)
+@check_perfil(Perfiles.TERRITORIAL, Perfiles.DEPARTAMENTO, Perfiles.CUADRILLA)
 def ver_encuesta_respondida(request, id):
     try:
         solicitud = SolicitudIncidencia.objects.get(id=id)
@@ -341,6 +318,151 @@ def ver_encuesta_respondida(request, id):
                 'respuesta': None
             })
     
+    archivos_adjuntos = ArchivoSolicitud.objects.filter(solicitud=solicitud, tipo='evidencia')
+    archivos_resolucion = ArchivoSolicitud.objects.filter(solicitud=solicitud, tipo='resolucion')
+    
+    context = {
+        'encuesta_data': encuesta_data,
+        'preguntas_con_respuestas': preguntas_con_respuestas,
+        'archivos_adjuntos': archivos_adjuntos,
+        'archivos_resolucion': archivos_resolucion,
+        'solicitud': solicitud,
+    }
+    
+    return render(request, 'encuesta/ver_encuesta_respondida.html', context)
+
+@territorial_required
+def editar_encuesta_respondida(request, id):
+    try:
+        solicitud = SolicitudIncidencia.objects.get(id=id)
+    except SolicitudIncidencia.DoesNotExist:
+        messages.error(request, 'La solicitud no existe.')
+        return redirect('listar_encuestas_responder')
+    
+    if solicitud.creado_por != request.user:
+        messages.error(request, 'No tiene permisos para editar esta incidencia.')
+        return redirect('ver_encuesta_respondida', id=id)
+    
+    if solicitud.estado not in ['abierta', 'rechazada']:
+        messages.error(request, 'No se puede editar una incidencia que ya ha sido cerrada.')
+        return redirect('ver_encuesta_respondida', id=id)
+    
+    encuesta_data = solicitud.encuesta_base
+    
+    if request.method == 'POST':
+        try:
+            ubicacion = request.POST.get('ubicacion')
+            if not ubicacion or not ubicacion.strip():
+                raise ValueError("La ubicación es obligatoria.")
+            
+            solicitud.ubicacion = ubicacion.strip()
+            
+            preguntas = encuesta_data.pregunta_set.all()
+            for pregunta in preguntas:
+                respuesta_texto = request.POST.get(f'pregunta_{pregunta.id}')
+                
+                if not respuesta_texto or not respuesta_texto.strip():
+                    raise ValueError(f"La pregunta '{pregunta.texto_pregunta}' es obligatoria.")
+                
+                # Buscar la respuesta existente o crear una nueva
+                respuesta, created = RespuestaSolicitud.objects.get_or_create(
+                    solicitud=solicitud,
+                    pregunta=pregunta,
+                    defaults={'respuesta_texto': respuesta_texto.strip()}
+                )
+                
+                if not created:
+                    respuesta.respuesta_texto = respuesta_texto.strip()
+                    respuesta.save()
+            
+            archivos_a_eliminar = request.POST.getlist('eliminar_archivos')
+            if archivos_a_eliminar:
+                archivos_eliminados = ArchivoSolicitud.objects.filter(
+                    id__in=archivos_a_eliminar,
+                    solicitud=solicitud
+                )
+                count_eliminados = archivos_eliminados.count()
+                archivos_eliminados.delete()
+                if count_eliminados > 0:
+                    messages.success(request, f'Se eliminaron {count_eliminados} archivo(s).')
+            
+            nuevos_archivos = request.FILES.getlist('archivos')
+            if nuevos_archivos:
+                archivos_guardados = []
+                
+                for archivo in nuevos_archivos:
+                    if archivo.size > 20 * 1024 * 1024:
+                        messages.warning(request, f'El archivo {archivo.name} es demasiado grande (máximo 20MB)')
+                        continue
+                    
+                    if not archivo.content_type.startswith(('image/', 'video/')):
+                        messages.warning(request, f'Solo se permiten imágenes y videos: {archivo.name}')
+                        continue
+                    
+                    extensiones_permitidas = [
+                        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+                        '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mpeg', '.mpg', '.mkv'
+                    ]
+                    nombre_archivo = archivo.name.lower()
+                    if not any(nombre_archivo.endswith(ext) for ext in extensiones_permitidas):
+                        messages.warning(request, f'Formato no permitido: {archivo.name}')
+                        continue
+                    
+                    archivo_adjunto = ArchivoSolicitud(
+                        solicitud=solicitud,
+                        archivo=archivo,
+                        nombre_original=archivo.name,
+                        tipo_contenido=archivo.content_type,
+                        tamaño=archivo.size
+                    )
+                    archivo_adjunto.save()
+                    archivos_guardados.append(archivo_adjunto)
+                
+                if archivos_guardados:
+                    messages.success(request, f'Se agregaron {len(archivos_guardados)} nuevo(s) archivo(s).')
+            
+            
+            if solicitud.estado == 'rechazada':
+                solicitud.estado = 'abierta'
+            solicitud.save()
+
+            messages.success(request, f'Incidencia "{encuesta_data.titulo_encuesta}" actualizada correctamente.')
+            return redirect('ver_encuesta_respondida', id=id)
+
+        except ValueError as e:
+            messages.error(request, str(e))
+            return cargar_datos_edicion(request, solicitud, encuesta_data)
+        except Exception as e:
+            messages.error(request, f'Error al actualizar la incidencia: {str(e)}')
+            return cargar_datos_edicion(request, solicitud, encuesta_data)
+
+    else:
+        return cargar_datos_edicion(request, solicitud, encuesta_data)
+
+
+def cargar_datos_edicion(request, solicitud, encuesta_data):
+    """
+    Función auxiliar para cargar los datos existentes para edición
+    """
+    preguntas = Pregunta.objects.filter(id_encuesta=encuesta_data.id)
+    
+    preguntas_con_respuestas = []
+    for pregunta in preguntas:
+        try:
+            respuesta = RespuestaSolicitud.objects.get(
+                solicitud=solicitud, 
+                pregunta=pregunta
+            )
+            preguntas_con_respuestas.append({
+                'pregunta': pregunta,
+                'respuesta': respuesta
+            })
+        except RespuestaSolicitud.DoesNotExist:
+            preguntas_con_respuestas.append({
+                'pregunta': pregunta,
+                'respuesta': None
+            })
+    
     archivos_adjuntos = ArchivoSolicitud.objects.filter(solicitud=solicitud)
     
     context = {
@@ -350,4 +472,4 @@ def ver_encuesta_respondida(request, id):
         'solicitud': solicitud,
     }
     
-    return render(request, 'encuesta/ver_encuesta_respondida.html', context)
+    return render(request, 'encuesta/editar_encuesta_respondida.html', context)

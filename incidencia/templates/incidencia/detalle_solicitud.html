@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Detalle Solicitud #{{ solicitud.id }}</h6>
+                </div>
+                <div class="card-body">
+                    <h4 class="mb-3">{{ solicitud.encuesta_base.titulo_encuesta }}</h4>
+                    
+                    <p><strong>Estado:</strong> 
+                        <span class="badge 
+                            {% if solicitud.estado == 'finalizada' %}badge-success{% endif %}
+                            {% if solicitud.estado == 'abierta' %}badge-info{% endif %}
+                            {% if solicitud.estado == 'derivada' %}badge-warning{% endif %}
+                            {% if solicitud.estado == 'en_revision' %}badge-primary{% endif %}
+                            {% if solicitud.estado == 'rechazada' %}badge-danger{% endif %}
+                        ">
+                        {{ solicitud.get_estado_display }}
+                        </span>
+                    </p>
+
+                    <p><strong>Ubicación:</strong> {{ solicitud.ubicacion|default:"No especificada" }}</p>
+                    <p><strong>Creada por:</strong> {{ solicitud.creado_por.nombre }} {{ solicitud.creado_por.apellido }}</p>
+                    <p><strong>Fecha Creación:</strong> {{ solicitud.creado|date:"d/m/Y H:i" }}</p>
+                    
+                    {% if solicitud.vecino_nombre %}
+                        <hr>
+                        <p><strong>Datos del Vecino:</strong><br>
+                        - Nombre: {{ solicitud.vecino_nombre }}<br>
+                        - Celular: {{ solicitud.vecino_celular|default:"-" }}<br>
+                        - Email: {{ solicitud.vecino_email|default:"-" }}
+                        </p>
+                    {% endif %}
+
+                    <hr>
+                    <p><strong>Departamento Asignado:</strong> {{ solicitud.departamento_asignado.nombre_departamento }}</p>
+                    <p><strong>Dirección Asignada:</strong> {{ solicitud.direccion_asignada.nombre_direccion }}</p>
+                    
+                    {% if solicitud.cuadrilla_asignada %}
+                        <p><strong>Cuadrilla Asignada:</strong> {{ solicitud.cuadrilla_asignada.nombre }} {{ solicitud.cuadrilla_asignada.apellido }}</p>
+                    {% endif %}
+                    
+                    <hr>
+                    <h5>Respuestas del Territorial:</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for respuesta in respuestas_listado %}
+                            <li class="list-group-item">
+                                <strong>{{ respuesta.pregunta.texto_pregunta }}</strong><br>
+                                <p class="mb-0">{{ respuesta.respuesta_texto }}</p>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">No hay respuestas registradas.</li>
+                        {% endfor %}
+                    </ul>
+
+                    {% if solicitud.archivos_adjuntos.all %}
+                        <hr>
+                        <h5>Archivos Adjuntos (Territorial):</h5>
+                        <ul>
+                            {% for archivo in solicitud.archivos_adjuntos.all %}
+                                <li><a href="{{ archivo.archivo.url }}" target="_blank">{{ archivo.nombre_original }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if solicitud.estado == 'en_revision' or solicitud.estado == 'finalizada' %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Resolución de Cuadrilla</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Cuadrilla:</strong> {{ solicitud.cuadrilla_asignada.nombre }} {{ solicitud.cuadrilla_asignada.apellido }}</p>
+                    <p><strong>Descripción:</strong></p>
+                    <p class="text-dark">{{ solicitud.descripcion_resolucion|linebreaksbr }}</p>
+                    
+                    {% if solicitud.imagen_resolucion %}
+                        <hr>
+                        <p><strong>Evidencia:</strong></p>
+                        <img src="{{ solicitud.imagen_resolucion.url }}" class="img-fluid rounded" alt="Evidencia de resolución">
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
+                </div>
+                <div class="card-body">
+
+                    {% if solicitud.estado == 'abierta' and request.user.perfil.id == PERFIL_DEPARTAMENTO_ID and request.user.departamento == solicitud.departamento_asignado %}
+                        <form action="{% url 'derivar_solicitud' solicitud.id %}" method="POST">
+                            {% csrf_token %}
+                            <h5>Derivar Solicitud</h5>
+                            <p>Asignar esta tarea a una cuadrilla de su departamento.</p>
+                            
+                            <div class="form-group">
+                                <label for="id_cuadrilla">Seleccionar Cuadrilla:</label>
+                                <select name="id_cuadrilla" id="id_cuadrilla" class="form-control" required>
+                                    <option value="">---</option>
+                                    {% for cuadrilla in cuadrillas_disponibles %}
+                                        <option value="{{ cuadrilla.id }}">{{ cuadrilla.nombre }} {{ cuadrilla.apellido }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% if not cuadrillas_disponibles %}
+                                <div class="alert alert-warning">No hay cuadrillas activas en su departamento.</div>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary btn-block" {% if not cuadrillas_disponibles %}disabled{% endif %}>
+                                Derivar a Cuadrilla
+                            </button>
+                        </form>
+                    {% endif %}
+
+
+                    {% if solicitud.estado == 'derivada' and request.user.perfil.id == PERFIL_CUADRILLA_ID and request.user.id == solicitud.cuadrilla_asignada.id %}
+                        <form action="{% url 'resolver_solicitud' solicitud.id %}" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <h5>Resolver Incidencia</h5>
+                            <p>Describa la resolución y adjunte una imagen de evidencia.</p>
+                            
+                            <div class="form-group">
+                                <label for="id_descripcion_resolucion">Descripción de la Resolución (*):</label>
+                                <textarea name="descripcion_resolucion" id="id_descripcion_resolucion" class="form-control" rows="5" required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_imagen_resolucion">Imagen de Evidencia (Opcional):</label>
+                                <input type="file" name="imagen_resolucion" id="id_imagen_resolucion" class="form-control-file">
+                            </div>
+
+                            <button type="submit" class="btn btn-success btn-block">
+                                Enviar a Revisión
+                            </button>
+                        </form>
+                    {% endif %}
+
+
+                    {% if solicitud.estado == 'en_revision' and request.user.perfil.id == PERFIL_DEPARTAMENTO_ID and request.user.departamento == solicitud.departamento_asignado %}
+                        <h5>Revisar Resolución</h5>
+                        <p>La cuadrilla ha marcado esta tarea como resuelta. Por favor, revise la información (en la columna izquierda) y apruebe o rechace.</p>
+                        
+                        <form action="{% url 'aprobar_resolucion' solicitud.id %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Aprobar
+                            </button>
+                        </form>
+
+                        <form action="{% url 'rechazar_resolucion' solicitud.id %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Rechazar
+                            </button>
+                        </form>
+                        <small class="form-text text-muted mt-2">Si rechaza, la tarea volverá a la cuadrilla.</small>
+                    {% endif %}
+                    
+
+                    {% if solicitud.estado == 'finalizada' %}
+                        <div class="alert alert-success text-center">
+                            <h5 class="mb-0">Solicitud Finalizada</h5>
+                            <small>{{ solicitud.actualizado|date:"d/m/Y" }}</small>
+                        </div>
+                    {% endif %}
+
+                    {% if solicitud.estado == 'rechazada' %}
+                        <div class="alert alert-danger text-center">
+                            <h5 class="mb-0">Solicitud Rechazada</h5>
+                            <small>{{ solicitud.actualizado|date:"d/m/Y" }}</small>
+                        </div>
+                    {% endif %}
+
+                    {% if solicitud.estado == 'abierta' and request.user.perfil.id != PERFIL_DEPARTAMENTO_ID %}
+                        <div class="alert alert-info">Solicitud abierta, esperando gestión de Departamento.</div>
+                    {% endif %}
+
+                    {% if solicitud.estado == 'derivada' and request.user.perfil.id != PERFIL_CUADRILLA_ID %}
+                        <div class="alert alert-warning">Solicitud derivada, esperando resolución de Cuadrilla.</div>
+                    {% endif %}
+                    
+                    {% if solicitud.estado == 'en_revision' and request.user.perfil.id != PERFIL_DEPARTAMENTO_ID %}
+                        <div class="alert alert-primary">Pendiente de revisión por el Departamento.</div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); }
+    .form-subtitle { color: var(--color-principal); font-size: 1.2rem; margin-bottom: 1.5rem; }
+    .form-divider { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
+    
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .detail-item { display: flex; flex-direction: column; }
+    .detail-label { font-size: 0.9rem; font-weight: 500; color: #888; margin-bottom: 0.25rem; }
+    .detail-value { font-size: 1.1rem; color: var(--text-color); }
+
+    .respuestas-list { list-style: none; padding-left: 0; }
+    .respuestas-list li { background-color: #f9f9f9; padding: 1rem; border-radius: 0.3rem; margin-bottom: 1rem; }
+    .respuestas-list p { margin: 0.5rem 0 0 0; }
+
+    .action-buttons-footer { display: flex; justify-content: flex-start; gap: 0.75rem; margin-top: 1.5rem; }
+    .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background-color: var(--color-principal); color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color); }
+    .form-control { width: 100%; padding: 0.75rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 0.3rem; }
+    textarea.form-control { min-height: 100px; }
+
+    .badge { /* ... (estilos de badge) ... */ }
+    /* (Añade los colores de badge por estado) */
+    .badge-abierta { background-color: var(--advertencia); color: #333; }
+    .badge-derivada { background-color: var(--color-principal); color: white; }
+    .badge-finalizada { background-color: var(--completado); color: white; }
+    .badge-rechazada { background-color: var(--error); color: white; }
+
+    /* ----- Mensajes de Alerta ----- */
+    .messages-container { list-style: none; padding: 0; margin: 0 0 1rem 0; }
+    .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
+    .message.error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
+</style>
+{% endblock %}

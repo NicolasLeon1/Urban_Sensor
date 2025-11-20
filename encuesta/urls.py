@@ -11,12 +11,9 @@ urlpatterns = [
     path('toggle_encuesta/<int:id>/', views.toggle_encuesta, name='toggle_encuesta'),
     path('eliminar_encuesta/<int:id>/', views.eliminar_encuesta, name='eliminar_encuesta'),
     path('ver_encuesta_respondida/<int:id>', views.ver_encuesta_respondida, name='ver_encuesta_respondida'),
+    path('editar_encuesta_respondida/<int:id>', views.editar_encuesta_respondida, name='editar_encuesta_respondida'),
     
-    # --- NUEVAS URLs PARA TERRITORIAL (Responder Encuesta) ---
-    
-    # 1. Lista de encuestas (plantillas) disponibles para responder
+    # --- URLs TERRITORIAL (Responder Encuesta) ---
     path('responder/listado/', views.listar_encuestas_responder, name='listar_encuestas_responder'),
-    
-    # 2. Vista para rellenar (responder) una encuesta específica y crear la Solicitud
     path('responder/nueva/<int:id_encuesta>/', views.responder_encuesta, name='responder_encuesta'),
 ]

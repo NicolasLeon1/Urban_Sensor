@@ -61,7 +61,7 @@ def login_view(request):
     if token:
         try:
             user = User.objects.get(session_token=token)
-            return render(request, 'register/logged.html')
+            return render(request, 'register/logged.html', {'user_data': user})
         except User.DoesNotExist:
             response = redirect('login')
             response.delete_cookie('auth_token')
