@@ -54,7 +54,7 @@ def nuevo_usuario(request):
                 telefono=telefono,
                 perfil=perfil
             )
-            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value:
+            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value or int(perfil_seleccionado) == Perfiles.CUADRILLA.value:
                 departamento_id = request.POST.get('departamento_especifico')
                 try:
                     departamento = Departamento.objects.filter(activo=True).get(pk=departamento_id)
@@ -135,7 +135,7 @@ def editar_usuario(request, id):
             user.email = email
             user.telefono = telefono
             user.perfil = perfil
-            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value:
+            if int(perfil_seleccionado) == Perfiles.DEPARTAMENTO.value or int(perfil_seleccionado) == Perfiles.CUADRILLA.value:
                 departamento_id = request.POST.get('departamento_especifico')
                 try:
                     departamento = Departamento.objects.filter(activo=True).get(pk=departamento_id)

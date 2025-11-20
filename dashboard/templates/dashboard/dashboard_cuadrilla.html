@@ -25,18 +25,17 @@
 
 {% block content %}
     <h1 style="color: var(--color-principal);">Panel de Cuadrilla</h1>
-    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user.profile.nombre }} {{ user.profile.apellido }}.</p>
-    <p style="font-size: 1.1rem; color: var(--text-color);">Cuadrilla Asignada: <strong>{{ user.profile.cuadrilla_asignada.nombre_cuadrilla }}</strong></p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Bienvenido, {{ user }}.</p>
+    <p style="font-size: 1.1rem; color: var(--text-color);">Perfil: <strong>{{ user.perfil }}</strong></p>
 
-    <!-- Estadísticas (Requerimiento: "Usuario que trabaja en terreno") -->
     <div class="dashboard-stats">
         <div class="stat-card" style="border-color: var(--advertencia);">
             <h4>Asignadas (Pendientes)</h4>
             <span>{{ conteo_asignadas|default:0 }}</span>
         </div>
         <div class="stat-card" style="border-color: var(--completado);">
-            <h4>Finalizadas (Hoy)</h4>
-            <span>{{ conteo_finalizadas_hoy|default:0 }}</span>
+            <h4>Finalizadas</h4>
+            <span>{{ conteo_finalizadas|default:0 }}</span>
         </div>
     </div>
 
@@ -48,7 +47,6 @@
         </ul>
     {% endif %}
 
-    <!-- Listado de Incidencias (Requerimiento: "elegir la incidencia asignada y subir imágenes") -->
     <div class="card" style="margin-top: 2rem;" id="incidencias-asignadas">
         <div class="card-header">
             <h2>Incidencias Asignadas Pendientes</h2>
@@ -58,6 +56,7 @@
                 <thead>
                     <tr>
                         <th># Reporte</th>
+                        <th>Titulo Incidencia</th>
                         <th>Tipo Incidencia</th>
                         <th>Ubicación</th>
                         <th>Prioridad</th>
@@ -69,7 +68,8 @@
                     {% for reporte in incidencias_asignadas %}
                     <tr>
                         <td>#{{ reporte.id }}</td>
-                        <td>{{ reporte.encuesta_plantilla.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
                         <td>{{ reporte.ubicacion }}</td>
                         <td>
                             {% if reporte.prioridad == 'alta' %}
@@ -80,10 +80,63 @@
                                 <span class="badge badge-secondary">Baja</span>
                             {% endif %}
                         </td>
-                        <td>{{ reporte.fecha_creacion|date:"d/m/Y" }}</td> <!-- (Debería ser 'fecha_derivacion' si la tuvieras) -->
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
                         <td>
-                            <!-- DEBERÁS CREAR esta vista y template -->
-                            <a href="{% url 'resolver_incidencia' reporte.id %}" class="btn btn-sm btn-success">Resolver</a>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Detalle</a>
+                                <a href="{% url 'resolver_incidencia' reporte.id %}" class="btn btn-sm btn-success">Resolver</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center;">No tienes incidencias asignadas pendientes.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem;" id="incidencias-asignadas">
+        <div class="card-header">
+            <h2>Incidencias Finalizadas</h2>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Reporte</th>
+                        <th>Titulo Incidencia</th>
+                        <th>Tipo Incidencia</th>
+                        <th>Ubicación</th>
+                        <th>Prioridad</th>
+                        <th>Fecha Asignación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in incidencias_finalizadas %}
+                    <tr>
+                        <td>#{{ reporte.id }}</td>
+                        <td>{{ reporte.encuesta_base.titulo_encuesta }}</td>
+                        <td>{{ reporte.encuesta_base.id_tipo_incidencia }}</td>
+                        <td>{{ reporte.ubicacion }}</td>
+                        <td>
+                            {% if reporte.encuesta_base.prioridad == 'alta' %}
+                                <span class="badge badge-danger">Alta</span>
+                            {% elif reporte.encuesta_base.prioridad == 'normal' %}
+                                <span class="badge badge-warning">Normal</span>
+                            {% else %}
+                                <span class="badge badge-secondary">Baja</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ reporte.creado|date:"d/m/Y" }}</td>
+                        <td>
+                            <div class="action-links">
+                                <a href="{% url 'ver_encuesta_respondida' reporte.id %}" class="btn btn-sm btn-info">Detalle</a>
+                                <a href="{% url 'reabrir_incidencia' reporte.id %}" class="btn btn-sm btn-danger">Revertir</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
@@ -108,10 +161,14 @@
     .card { background: #FFFFFF; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); }
     .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); }
     .card-header h2 { color: var(--color-principal); }
+    
+    .action-links a { margin-right: 0.25rem; }
+    .action-links { white-space: nowrap; }
 
     .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: var(--color-principal); border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
     .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
     .btn-success { background-color: var(--completado); }
+    .btn-danger { background-color: var(--error); }
 
     .table-container { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; }

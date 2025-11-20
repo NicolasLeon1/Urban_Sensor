@@ -1,7 +1,8 @@
 from register.decorators import *
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
-from .models import TipoIncidencia, SolicitudIncidencia, RespuestaSolicitud # Importar nuevos modelos
+from .models import TipoIncidencia, SolicitudIncidencia, RespuestaSolicitud
+from encuesta.models import ArchivoSolicitud, Pregunta
 from direccion.models import Direccion
 from departamento.models import Departamento
 from register.models import User, Perfiles
@@ -104,106 +105,38 @@ def toggle_incidencia(request, id):
         messages.error(request, 'El tipo de incidencia no existe')
         return redirect('main_incidencia')
 
-# --- NUEVAS VISTAS PARA GESTIÓN DE SOLICITUDES (Tickets) ---
-
-@login_required # Usar login_required general
-def detalle_solicitud(request, id_solicitud):
-    """
-    Vista genérica para ver el detalle de una solicitud (ticket).
-    Muestra la solicitud, la encuesta base, y las respuestas dadas.
-    La plantilla HTML debe mostrar/ocultar los botones de "Derivar" o "Resolver"
-    según el perfil del usuario (ej. request.user.perfil.id).
-    """
-    solicitud = get_object_or_404(
-        SolicitudIncidencia.objects.select_related(
-            'encuesta_base', 
-            'creado_por', 
-            'direccion_asignada',
-            'departamento_asignado',
-            'cuadrilla_asignada'
-        ), 
-        pk=id_solicitud
-    )
-    
-    # --- Validación de Permisos (Simplificada) ---
-    user = request.user
-    puede_ver = False
-    
-    if user.perfil.id == Perfiles.SECPLA.value:
-        puede_ver = True
-    elif user.perfil.id == Perfiles.DIRECCION.value and user.direccion == solicitud.direccion_asignada:
-        puede_ver = True
-    elif user.perfil.id == Perfiles.DEPARTAMENTO.value and user.departamento == solicitud.departamento_asignado:
-        puede_ver = True
-    elif user.perfil.id == Perfiles.TERRITORIAL.value and user == solicitud.creado_por:
-        puede_ver = True
-    elif user.perfil.id == Perfiles.CUADRILLA.value and user == solicitud.cuadrilla_asignada:
-        puede_ver = True
-
-    if not puede_ver:
-        messages.error(request, 'No tiene permisos para ver esta solicitud.')
-        # Redirigir al dashboard general (dashboard/urls.py usa 'to_dashboard')
-        return redirect('to_dashboard') 
-
-    # Obtener las respuestas (R: Pregunta -> Respuesta)
-    respuestas = RespuestaSolicitud.objects.filter(solicitud=solicitud).select_related('pregunta')
-    
-    # Contexto para derivación (si es Depto)
-    cuadrillas_depto = []
-    if user.perfil.id == Perfiles.DEPARTAMENTO.value and solicitud.estado == 'abierta':
-         cuadrillas_depto = User.objects.filter(
-            activo=True, 
-            perfil__id=Perfiles.CUADRILLA.value,
-            departamento=user.departamento # Asume que cuadrilla pertenece a depto
-        )
-
-    return render(request, 'incidencia/detalle_solicitud.html', {
-        'solicitud': solicitud,
-        'respuestas_listado': respuestas,
-        'cuadrillas_disponibles': cuadrillas_depto,
-    })
-
-
 @departamento_required
-def derivar_solicitud(request, id_solicitud):
-    """
-    Vista (solo POST) que usa el Departamento para asignar 
-    una solicitud 'abierta' a una Cuadrilla.
-    (Requerimiento: Departamento ... Puede derivar una incidencia a una cuadrilla)
-    """
+def derivar_incidencia(request, id_solicitud):
     if request.method != 'POST':
         return redirect('dashboard_departamento')
     
-    solicitud = get_object_or_404(SolicitudIncidencia, pk=id_solicitud)
-    
-    # Validar que el depto es el dueño
-    if solicitud.departamento_asignado != request.user.departamento:
-        messages.error(request, 'No puede derivar una solicitud que no pertenece a su departamento.')
+    try:
+        solicitud = SolicitudIncidencia.objects.get(pk=id_solicitud)
+    except:
+        messages.error(request, 'No existe la solicitud')
         return redirect('dashboard_departamento')
-    
-    # Validar que esté 'abierta'
-    if solicitud.estado != 'abierta':
-        messages.error(request, 'Esta solicitud ya ha sido gestionada (derivada, rechazada o finalizada).')
-        return redirect('detalle_solicitud', id_solicitud=id_solicitud)
 
     try:
-        cuadrilla_id = request.POST.get('id_cuadrilla')
+        cuadrilla_id = request.POST.get('cuadrilla_id')
         if not cuadrilla_id:
             raise ValueError("Debe seleccionar una cuadrilla para derivar.")
             
-        # Validar que la cuadrilla exista, sea de este depto y tenga el perfil correcto
         cuadrilla = User.objects.get(
             pk=cuadrilla_id, 
-            perfil__id=Perfiles.CUADRILLA.value, 
+            perfil__id=Perfiles.CUADRILLA.value,
             departamento=request.user.departamento
         )
+
+        if solicitud.estado != 'abierta':
+            messages.success(request, f'Cuadrilla transferida desde "{solicitud.cuadrilla_asignada}" a "{cuadrilla}"')
+        else:
+            messages.success(request, f'Solicitud derivada correctamente a "{cuadrilla}".')
         
         solicitud.cuadrilla_asignada = cuadrilla
         solicitud.estado = 'derivada'
         solicitud.save()
-        
-        messages.success(request, f'Solicitud derivada correctamente a {cuadrilla.nombre} {cuadrilla.apellido}.')
-        return redirect('detalle_solicitud', id_solicitud=id_solicitud)
+
+        return redirect('to_dashboard')
 
     except User.DoesNotExist:
         messages.error(request, 'La cuadrilla seleccionada no es válida o no pertenece a su departamento.')
@@ -212,50 +145,154 @@ def derivar_solicitud(request, id_solicitud):
     except Exception as e:
         messages.error(request, f'Error al derivar la solicitud: {str(e)}')
     
-    return redirect('detalle_solicitud', id_solicitud=id_solicitud)
-
+    return redirect('to_dashboard')
 
 @cuadrilla_required
-def resolver_solicitud(request, id_solicitud):
-    """
-    Vista (solo POST) que usa la Cuadrilla para marcar 
-    una solicitud 'derivada' como 'finalizada'.
-    (Requerimiento: Cuadrilla ... subir imágenes o descripciones)
-    """
-    if request.method != 'POST':
-        return redirect('dashboard_cuadrilla')
-
-    solicitud = get_object_or_404(SolicitudIncidencia, pk=id_solicitud)
+def resolver_incidencia(request, id_solicitud):
+    if request.method == 'GET':
+        solicitud = get_object_or_404(SolicitudIncidencia, pk=id_solicitud)
+        encuesta_data = solicitud.encuesta_base
+        archivos_resolucion = ArchivoSolicitud.objects.filter(solicitud=solicitud, tipo='resolucion')
+        archivos_evidencia = ArchivoSolicitud.objects.filter(solicitud=solicitud, tipo='evidencia')
+        preguntas = Pregunta.objects.filter(id_encuesta=encuesta_data.id)
     
-    # Validar que la cuadrilla es la asignada
-    if solicitud.cuadrilla_asignada != request.user:
-        messages.error(request, 'No puede resolver una solicitud que no le fue asignada.')
-        return redirect('dashboard_cuadrilla')
+        preguntas_con_respuestas = []
+        for pregunta in preguntas:
+            try:
+                respuesta = RespuestaSolicitud.objects.get(
+                    solicitud=solicitud, 
+                    pregunta=pregunta
+                )
+                preguntas_con_respuestas.append({
+                    'pregunta': pregunta,
+                    'respuesta': respuesta
+                })
+            except RespuestaSolicitud.DoesNotExist:
+                preguntas_con_respuestas.append({
+                    'pregunta': pregunta,
+                    'respuesta': None
+                })
+        context = {
+            'solicitud': solicitud,
+            'encuesta_data': solicitud.encuesta_base,
+            'preguntas_con_respuestas': preguntas_con_respuestas,
+            'archivos_evidencia': archivos_evidencia,
+            'archivos_resolucion_existentes': archivos_resolucion,
+            'user': request.user,
+        }
+        return render(request, 'incidencia/resolver_incidencia.html', context)
+    else:
+        solicitud = get_object_or_404(SolicitudIncidencia, pk=id_solicitud)
     
-    # Validar que esté 'derivada' (pendiente de resolución)
-    if solicitud.estado != 'derivada':
-        messages.error(request, 'Esta solicitud no está pendiente de resolución.')
-        return redirect('detalle_solicitud', id_solicitud=id_solicitud)
-    
-    try:
-        descripcion = request.POST.get('descripcion_resolucion')
-        # imagen = request.FILES.get('imagen_resolucion') # (Lógica de imagen no implementada)
+        if solicitud.cuadrilla_asignada != request.user:
+            messages.error(request, 'No puede resolver una solicitud que no le fue asignada.')
+            return redirect('dashboard_cuadrilla')
+        
+        if solicitud.estado != 'derivada':
+            messages.error(request, 'Esta solicitud no está pendiente de resolución.')
+            return redirect('to_dashboard')
+        
+        try:
+            descripcion = request.POST.get('descripcion_resolucion')
 
-        if not descripcion or not descripcion.strip():
-            raise ValueError("Debe ingresar una descripción de la resolución.")
+            if not descripcion or not descripcion.strip():
+                messages.error(request, 'Debe ingresar una descripción de la resolución.')
+                return redirect('to_dashboard')
 
-        solicitud.descripcion_resolucion = descripcion
-        solicitud.estado = 'finalizada'
-        # solicitud.imagen_resolucion = imagen # (Si se implementa imagen)
+            archivos_a_eliminar = request.POST.getlist('eliminar_archivos_resolucion')
+            nuevos_archivos = request.FILES.getlist('archivos_resolucion')
+
+            if archivos_a_eliminar:
+                for archivo in archivos_a_eliminar:
+                    try:
+                        ArchivoSolicitud.objects.filter(id=archivo, solicitud=solicitud).delete()
+                    except:
+                        messages.error(request, 'Hubo un error al eliminar los archivos.')
+                        return redirect('resolver_incidencia', id_solicitud)
+            if nuevos_archivos:
+                for archivo in nuevos_archivos:
+                    ArchivoSolicitud.objects.create(
+                        solicitud=solicitud,
+                        archivo=archivo,
+                        nombre_original=archivo.name,
+                        tipo_contenido=archivo.content_type,
+                        tamaño=archivo.size,
+                        tipo='resolucion'
+                    )
+            else:
+                messages.error(request, 'No adjunto ningun archivo de resolucion.')
+                return redirect('resolver_incidencia', id_solicitud)
+            
+            solicitud.descripcion_resolucion = descripcion
+            solicitud.estado = 'finalizada'
+            solicitud.save()
+            messages.success(request, 'Solicitud resuelta correctamente.')
+            return redirect('to_dashboard')
+
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            messages.error(request, f'Error al guardar la resolución: {str(e)}')
+            
+        return redirect('to_dashboard')
+
+@departamento_required
+def rechazar_incidencia(request, id_solicitud):
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudIncidencia, pk=id_solicitud)
+        
+        motivo_rechazo = request.POST.get('motivo_rechazo', '').strip()
+        
+        if not motivo_rechazo:
+            messages.error(request, 'Debe ingresar un motivo para rechazar la solicitud.')
+            return redirect('dashboard_departamento')
+        
+        solicitud.estado = 'rechazada'
+        solicitud.descripcion_rechazo = motivo_rechazo
         solicitud.save()
         
-        messages.success(request, 'Solicitud marcada como finalizada correctamente.')
-        # Devolver al dashboard de cuadrilla (la tarea ya no aparecerá en pendientes)
-        return redirect('dashboard_cuadrilla')
-
-    except ValueError as e:
-        messages.error(request, str(e))
-    except Exception as e:
-        messages.error(request, f'Error al guardar la resolución: {str(e)}')
+        messages.success(request, f'Solicitud #{id_solicitud} rechazada exitosamente.')
+        return redirect('dashboard_departamento')
     
-    return redirect('detalle_solicitud', id_solicitud=id_solicitud)
+    return redirect('dashboard_departamento')
+
+@territorial_required
+def cancelar_incidencia(request, id_solicitud):
+    solicitud = get_object_or_404(SolicitudIncidencia, pk=id_solicitud)
+    solicitud.delete()
+    return redirect('to_dashboard')
+
+@check_perfil(Perfiles.TERRITORIAL, Perfiles.CUADRILLA)
+def reabrir_incidencia(request, id_solicitud):
+    solicitud = get_object_or_404(SolicitudIncidencia, pk=id_solicitud)
+    if solicitud.estado in ('rechazada', 'finalizada'):
+        descripcion_reabrir = request.POST.get('motivo_reapertura', '')
+        if request.user.perfil.id != Perfiles.CUADRILLA.value:
+            if descripcion_reabrir == '':
+                messages.error(request, 'La descripcion para reabrir no puede estar vacia.')
+                return redirect('to_dashboard')
+            solicitud.descripcion_reabrir = descripcion_reabrir
+            solicitud.estado = 'abierta'
+        else:
+            solicitud.estado = 'derivada'
+        solicitud.save()
+        messages.success(request, 'Solicitud reabierta correctamente.')
+        return redirect('to_dashboard')
+    else:
+        messages.error(request, 'La solicitud no se encuentra en un estado para poder reabrirse.')
+        return redirect('to_dashboard')
+
+@departamento_required
+def revertir_derivacion(request, id_solicitud):
+    try:
+        solicitud = SolicitudIncidencia.objects.get(pk=id_solicitud)
+    except:
+        messages.error(request, 'No existe la solicitud')
+        return redirect('dashboard_departamento')
+
+    solicitud.cuadrilla_asignada = None
+    solicitud.estado = 'abierta'
+    solicitud.save()
+
+    messages.success(request, 'Se revirtio correctamente la derivacion de la solicitud.')
+    return redirect('to_dashboard')

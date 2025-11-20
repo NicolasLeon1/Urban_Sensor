@@ -1,9 +1,7 @@
 from django.db import models
 from departamento.models import Departamento
 from incidencia.models import SolicitudIncidencia
-# from incidencia.models import TipoIncidencia  # <-- SE ELIMINA ESTA IMPORTACIÓN
 
-# Create your models here.
 class Encuesta(models.Model):
     PRIORIDADES = [
         ('alta', 'Alta'),
@@ -42,6 +40,11 @@ class Pregunta(models.Model):
         return self.texto_pregunta
 
 class ArchivoSolicitud(models.Model):
+    TIPOS_ARCHIVO = [
+        ('evidencia', 'Evidencia Original'),
+        ('resolucion', 'Archivo de Resolución'),
+    ]
+
     solicitud = models.ForeignKey(
         SolicitudIncidencia,
         on_delete=models.CASCADE,
@@ -55,6 +58,7 @@ class ArchivoSolicitud(models.Model):
     tipo_contenido = models.CharField(max_length=100)
     tamaño = models.BigIntegerField(help_text='Tamaño en bytes')
     fecha_subida = models.DateTimeField(auto_now_add=True)
+    tipo = models.CharField(choices=TIPOS_ARCHIVO, default='evidencia')
     
     def __str__(self):
         return f"{self.nombre_original} - {self.solicitud.id}"
