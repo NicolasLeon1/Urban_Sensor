@@ -8,6 +8,8 @@ urlpatterns = [
     path('ver_incidencia/<int:id>/', views.ver_incidencia, name='ver_incidencia'),
     path('editar_incidencia/<int:id>/', views.editar_incidencia, name='editar_incidencia'),
     path('toggle_incidencia/<int:id>/', views.toggle_incidencia, name='toggle_incidencia'),
+    path('eliminar/<int:id>/', views.eliminar_incidencia, name='eliminar_incidencia'),
+
 
     # --- URLs (Gestión de Solicitudes de Incidencia) ---
     path('solicitud/rechazar/<int:id_solicitud>/', views.rechazar_incidencia, name='rechazar_incidencia'),
