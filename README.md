@@ -89,3 +89,5 @@ Ejecutar el Servidor
 Finalmente, inicia el servidor de desarrollo:
 
 python manage.py runserver
+
+La contraseña de los usuarios creados por create-test es "1234"
