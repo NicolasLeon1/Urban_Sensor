@@ -22,7 +22,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('', include('core.urls')),
-    path('encuesta/', include('encuesta.urls')),
     path('accounts/', include('register.urls')),
     path('user/', include('usuarios.urls')),
     path('admin/', admin.site.urls),
@@ -31,12 +30,7 @@ urlpatterns = [
     path('encuesta/', include('encuesta.urls')),
     path('departamento/', include('departamento.urls')),
     path('dashboard/', include('dashboard.urls')),
-<<<<<<< HEAD
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-=======
-    path('', include(('register.urls', 'register'), namespace='register')),
-]
->>>>>>> 749a14114617714c2e032e2cec0b12a8f1bb7853
