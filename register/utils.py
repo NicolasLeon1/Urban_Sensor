@@ -10,7 +10,6 @@ def tiene_perfil(request, perfil_requerido):
     Helper function para verificar el perfil del usuario en la request.
     Asume que request.user está poblado por el decorador @login_required.
     """
-    # El decorador @login_required debe asegurar que request.user exista
     if not hasattr(request, 'user'):
         return False
     
@@ -20,7 +19,6 @@ def tiene_perfil(request, perfil_requerido):
         
         return perfil_usuario_id == perfil_requerido_value
     except Exception:
-        # En caso de que request.user no sea el objeto User esperado
         return False
 
 def tiene_algun_perfil(request, *perfiles):

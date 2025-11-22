@@ -2,13 +2,12 @@
 {% load static %}
 {% block sidebar_content %}
 <li>
-    <a href="{% url 'dashboard_admin' %}"> {# Asumo que tienes una url llamada dashboard_admin #}
+    <a href="{% url 'dashboard_admin' %}"> 
         <img src="{% static 'icons/dashboard.svg' %}" alt="">
         <span>Dashboard</span>
     </a>
 </li>
 <li>
-    {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
     <a href="{% url 'main_usuario' %}">
         <img src="{% static 'icons/users.svg' %}" alt="">
         <span>Gestión de Usuarios</span>
@@ -150,7 +149,6 @@
 
 {% block extra_css %}
 <style>
-    /* Estilos de Formulario */
     .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     .form-group { margin-bottom: 1.25rem; }
@@ -163,7 +161,6 @@
     .form-divider { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     .form-subtitle { color: var(--color-principal); font-size: 1.2rem; margin-bottom: 1rem; }
 
-    /* Estilos de Preguntas Dinámicas */
     .pregunta-existente-item,
     .pregunta-nueva-item {
         display: flex;
@@ -173,15 +170,13 @@
     }
     .pregunta-existente-item input,
     .pregunta-nueva-item input {
-        flex-grow: 1; /* El input toma todo el espacio disponible */
+        flex-grow: 1; 
     }
 
-    /* Checkbox de eliminar */
     .form-check { display: flex; align-items: center; gap: 0.4rem; }
     .form-check-input { width: 1rem; height: 1rem; }
     .form-check-label { font-size: 0.9rem; color: var(--error); cursor: pointer; }
 
-    /* Botones */
     .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
     .btn:hover { opacity: 0.85; }
     .btn-primary { background-color: var(--color-principal); color: white; }
@@ -193,7 +188,6 @@
     
     .action-buttons-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; }
 
-    /* ----- Mensajes de Alerta ----- */
     .messages-container { list-style: none; padding: 0; margin: 0 0 1rem 0; }
     .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
     .message.error {
@@ -205,23 +199,19 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Lógica para FILTRO DE INCIDENCIAS POR DEPARTAMENTO
     const departamentoSelect = document.getElementById('id_departamento');
     const tipoIncidenciaField = document.getElementById('tipo-incidencia-field');
     const tipoIncidenciaSelect = document.getElementById('id_tipo_incidencia');
     const tipoIncidenciaOptions = tipoIncidenciaSelect.querySelectorAll('option[data-departamento]');
     
-    // Guardar el tipo de incidencia seleccionado actualmente
     const tipoIncidenciaSeleccionado = tipoIncidenciaSelect.value;
     
     function actualizarIncidencias() {
         const departamentoId = departamentoSelect.value;
         
         if (departamentoId) {
-            // Mostrar el campo de tipo de incidencia
             tipoIncidenciaField.style.display = 'block';
             
-            // Mostrar solo las incidencias del departamento seleccionado
             tipoIncidenciaOptions.forEach(option => {
                 if (option.getAttribute('data-departamento') === departamentoId) {
                     option.style.display = 'block';
@@ -230,14 +220,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Verificar si el tipo de incidencia actualmente seleccionado pertenece al nuevo departamento
             const opcionSeleccionada = tipoIncidenciaSelect.querySelector(`option[value="${tipoIncidenciaSeleccionado}"]`);
             if (opcionSeleccionada && opcionSeleccionada.getAttribute('data-departamento') !== departamentoId) {
-                // Si no pertenece, limpiar la selección
                 tipoIncidenciaSelect.value = '';
             }
         } else {
-            // Si no hay departamento seleccionado, ocultar el campo de tipo de incidencia
             tipoIncidenciaField.style.display = 'none';
             tipoIncidenciaSelect.value = '';
         }
@@ -245,19 +232,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     departamentoSelect.addEventListener('change', actualizarIncidencias);
     
-    // Ejecutar al cargar la página para aplicar el filtro inicial
     actualizarIncidencias();
 
-    // Lógica para NUEVAS preguntas
     const btnAgregarNueva = document.getElementById('btn-agregar-nueva');
     const containerNuevas = document.getElementById('preguntas-nuevas-container');
     
     function actualizarBotonesNuevas() {
         const botones = containerNuevas.querySelectorAll('.btn-eliminar-nueva');
         if (botones.length === 1) {
-            // Deshabilitar si es el último
             botones[0].disabled = true;
-            // Si el input está vacío, no es requerido
             const input = botones[0].closest('.pregunta-nueva-item').querySelector('input');
             if (input.value.trim() === '') {
                 input.required = false;
@@ -265,7 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.required = true;
             }
         } else {
-            // Habilitar todos y hacerlos requeridos
             botones.forEach(boton => {
                 boton.disabled = false;
                 boton.closest('.pregunta-nueva-item').querySelector('input').required = true;
@@ -297,7 +279,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Lógica para PREGUNTAS EXISTENTES (deshabilitar input si se marca eliminar)
     const containerExistentes = document.querySelectorAll('.pregunta-existente-item');
     containerExistentes.forEach(item => {
         const checkbox = item.querySelector('.form-check-input');

@@ -2,13 +2,12 @@
 {% load static %}
 {% block sidebar_content %}
 <li>
-    <a href="{% url 'dashboard_admin' %}"> {# Asumo que tienes una url llamada dashboard_admin #}
+    <a href="{% url 'dashboard_admin' %}"> 
         <img src="{% static 'icons/dashboard.svg' %}" alt="">
         <span>Dashboard</span>
     </a>
 </li>
 <li>
-    {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
     <a href="{% url 'main_usuario' %}" class="selected">
         <img src="{% static 'icons/users.svg' %}" alt="">
         <span>Gestión de Usuarios</span>
@@ -123,7 +122,6 @@
 
 {% block extra_css %}
 <style>
-    /* Estilos de Formulario */
     .card {
         background: #FFFFFF;
         border-radius: 0.5rem;
@@ -163,12 +161,10 @@
         box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2);
     }
     
-    /* Campos dinámicos */
     .dynamic-field {
         display: none;
     }
 
-    /* Botones */
     .action-buttons-footer {
         display: flex;
         justify-content: flex-end;
@@ -207,7 +203,6 @@
         const departamentoSelect = document.getElementById('departamento-select');
         
         function updateFields() {
-            // Ocultar y des-requerir todo primero
             direccionField.style.display = 'none';
             direccionSelect.required = false;
             departamentoField.style.display = 'none';
@@ -215,22 +210,18 @@
             
             const selectedValue = perfilSelect.value;
             
-            // Perfil "DIRECCION" (ID 2)
             if (selectedValue === '2') { 
                 direccionField.style.display = 'block';
                 direccionSelect.required = true;
             } 
-            // Perfil "DEPARTAMENTO" (ID 3)
             else if (selectedValue === '3' || selectedValue === '5') { 
                 departamentoField.style.display = 'block';
                 departamentoSelect.required = true;
             }
         }
         
-        // Ejecutar al cambiar la selección
         perfilSelect.addEventListener('change', updateFields);
         
-        // Ejecutar al cargar la página (para el caso de editar)
         updateFields();
     });
 </script>

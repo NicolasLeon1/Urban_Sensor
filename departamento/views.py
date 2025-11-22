@@ -5,8 +5,6 @@ from direccion.models import Direccion
 from departamento.models import Departamento
 from register.models import Profile
 
-# Create your views here.
-
 @secpla_required
 def main_departamento(request):
     listado_departamento = Departamento.objects.all().order_by('nombre_departamento')

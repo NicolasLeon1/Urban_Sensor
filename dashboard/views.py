@@ -89,7 +89,6 @@ def dashboard_territorial(request):
         creado_por=request.user
     )
     
-    # Estadísticas numéricas
     stats = solicitudes_creadas.values('estado').annotate(total=Count('estado'))
     stats_dict = {
         'abierta': 0, 'derivada': 0, 'rechazada': 0, 'finalizada': 0
@@ -97,7 +96,6 @@ def dashboard_territorial(request):
     for s in stats:
         stats_dict[s['estado']] = s['total']
 
-    # Listados por estado
     context = {
         'stats': stats_dict,
         'total_creadas': solicitudes_creadas.count(),

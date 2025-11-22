@@ -13,29 +13,24 @@ Este proyecto está construido siguiendo las especificaciones del "Tutorial 01 -
 * **Base de Datos:** `PostgreSQL`
 * **Conector de Base de Datos:** `psycopg2-binary 2.9.10`
 * **Frontend:** `HTML`, `CSS`, `JavaScript`
-* **Librerías Frontend:** `Chart.js` (para los gráficos del dashboard)
+* **Librerías Frontend:** `Chart.js` 
 
----
 
 ## 🌟 Características Principales
 
-El sistema se divide en varios módulos clave:
-
-* **Gestión de Registro y Perfiles:** Control de acceso y autenticación.
+* **Gestión de Registro y Perfiles:** 
 * **Gestión de Estructura:**
     * Módulo de **Direcciones**
     * Módulo de **Departamentos**
 * **Gestión de Incidencias:**
     * Módulo de **Tipos de Incidencia**
-    * Módulo de **Encuestas** (usadas como plantillas para crear reportes)
-    * Módulo de **Solicitudes de Incidencia** (los reportes reales)
-* **Dashboards por Perfil:** Vistas personalizadas para cada rol.
+    * Módulo de **Encuestas** 
+    * Módulo de **Solicitudes de Incidencia** 
+* **Dashboards por Perfil:** 
 
 ---
 
 ## 👥 Perfiles de Usuario
-
-El sistema maneja 5 roles de usuario, cada uno con permisos específicos:
 
 1.  **SECPLA (Administrador):** Tiene control total. Crea usuarios, direcciones, departamentos y las plantillas de encuesta.
 2.  **Dirección:** Supervisa las incidencias asignadas a los departamentos bajo su cargo.
@@ -53,8 +48,6 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 
 Se recomienda usar `conda` para gestionar el entorno, tal como se especifica en el tutorial.
 
-```bash
-# 1. Crea y activa un nuevo entorno con Python 3.11
 conda create -n urban_sensor_env python=3.11
 
 conda activate urban_sensor_env
@@ -62,13 +55,10 @@ conda activate urban_sensor_env
 2. Instalación de Dependencias
 Instala las librerías necesarias para el proyecto:
 
-
-
 pip install -r requirements.txt
 
 3. Base de Datos
 Asegúrate de tener PostgreSQL configurado y aplica las migraciones:
-
 
 python manage.py migrate
 

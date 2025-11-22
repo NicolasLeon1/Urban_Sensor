@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 
 :root {
-    --color-principal: #0056b3;    /* AZUL MUNICIPAL - Encabezados, botones, iconos de acción */
-    --color-secundario: #002B5B;   /* AZUL OSCURO - Sidebar, fondo de pantalla */
-    --texto-principal: #333333;    /* GRIS OSCURO - Contenido y títulos */
-    --fondo-general: #F0F0F0;      /* GRIS CLARO - Fondo de secciones y formularios */
-    --completado: #28A745;         /* VERDE - Estados finalizados/aprobados */
-    --advertencia: #FFC107;        /* AMARILLO - Pendientes/en proceso */
-    --error: #DC3545;              /* ROJO - Rechazados/bloqueados */
+    --color-principal: #0056b3;    
+    --color-secundario: #002B5B;   
+    --texto-principal: #333333;    
+    --fondo-general: #F0F0F0;      
+    --completado: #28A745;         
+    --advertencia: #FFC107;        
+    --error: #DC3545;              
 
     --fondo-hover: #d7dce2;
     --fondo-selected: #bbc6cf;
@@ -24,15 +24,15 @@
     --background-hover: var(--fondo-hover);
     --border-color: var(--borde-suave);
 
-    --texto-claro: #333333;        /* Texto sobre fondos oscuros */
+    --texto-claro: #333333;        
 }
-/* ... (todo tu :root y estilos) ... */
+
 
 @font-face {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 400;
-    src: url('../fonts/Roboto-Regular.ttf') format('truetype'); /* <-- CAMBIO AQUÍ */
+    src: url('../fonts/Roboto-Regular.ttf') format('truetype'); 
     font-display: swap;
 }
 
@@ -40,7 +40,7 @@
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 500;
-    src: url('../fonts/Roboto-Medium.ttf') format('truetype'); /* <-- CAMBIO AQUÍ */
+    src: url('../fonts/Roboto-Medium.ttf') format('truetype'); 
     font-display: swap;
 }
 
@@ -48,11 +48,11 @@
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 700;
-    src: url('../fonts/Roboto-Bold.ttf') format('truetype'); /* <-- CAMBIO AQUÍ */
+    src: url('../fonts/Roboto-Bold.ttf') format('truetype'); 
     font-display: swap;
 }
 
-/* ... (el resto de tus estilos) ... */
+
 
 * {
     margin: 0;

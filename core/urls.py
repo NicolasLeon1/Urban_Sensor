@@ -1,5 +1,5 @@
-from django.urls import path #importa el metodo path
-from core import views #improta los metodos de que se implementan en el views,py de este directorio
+from django.urls import path 
+from core import views 
 '''
 En esta sección configuramos las urls que nuestra aplicación usará, si necesitamos renderizar 
 una vista o debemos incluirla en el urlpatternes de la app la función path requiere de tres 

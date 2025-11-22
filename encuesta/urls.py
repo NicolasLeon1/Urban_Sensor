@@ -3,7 +3,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # --- URLs de Admin (SECPLA) ---
     path('main_encuesta/', views.main_encuesta, name='main_encuesta'),
     path('nueva_encuesta/', views.nueva_encuesta, name='nueva_encuesta'),
     path('ver_encuesta/<int:id>/', views.ver_encuesta, name='ver_encuesta'),
@@ -13,7 +12,6 @@ urlpatterns = [
     path('ver_encuesta_respondida/<int:id>', views.ver_encuesta_respondida, name='ver_encuesta_respondida'),
     path('editar_encuesta_respondida/<int:id>', views.editar_encuesta_respondida, name='editar_encuesta_respondida'),
     
-    # --- URLs TERRITORIAL (Responder Encuesta) ---
     path('responder/listado/', views.listar_encuestas_responder, name='listar_encuestas_responder'),
     path('responder/nueva/<int:id_encuesta>/', views.responder_encuesta, name='responder_encuesta'),
 ]
