@@ -2,13 +2,12 @@
 {% load static %}
 {% block sidebar_content %}
 <li>
-    <a href="{% url 'dashboard_admin' %}"> {# Asumo que tienes una url llamada dashboard_admin #}
+    <a href="{% url 'dashboard_admin' %}"> 
         <img src="{% static 'icons/dashboard.svg' %}" alt="">
         <span>Dashboard</span>
     </a>
 </li>
 <li>
-    {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
     <a href="{% url 'main_usuario' %}">
         <img src="{% static 'icons/users.svg' %}" alt="">
         <span>Gestión de Usuarios</span>
@@ -78,21 +77,18 @@
 
 {% block extra_css %}
 <style>
-    /* Estilos de Formulario */
     .card { background: #FFFFFF; border-radius: 0.5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); border: 1px solid var(--border-color); margin-top: 1.5rem; max-width: 600px; }
     .form-group { margin-bottom: 1.25rem; }
     .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-color); }
     .form-control { width: 100%; padding: 0.75rem; font-size: 0.95rem; border: 1px solid var(--border-color); border-radius: 0.3rem; background-color: #FFFFFF; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
     .form-control:focus { outline: none; border-color: var(--color-principal); box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2); }
 
-    /* Botones */
     .action-buttons-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; }
     .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
     .btn:hover { opacity: 0.85; }
     .btn-primary { background-color: var(--color-principal); color: white; }
     .btn-secondary { background-color: #6c757d; color: white; }
 
-    /* ----- Mensajes de Alerta ----- */
     .messages-container { list-style: none; padding: 0; margin: 0 0 1rem 0; }
     .message { padding: 1rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: 0.3rem; }
     .message.error {

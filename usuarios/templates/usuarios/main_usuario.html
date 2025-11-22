@@ -2,13 +2,12 @@
 {% load static %}
 {% block sidebar_content %}
 <li>
-    <a href="{% url 'dashboard_admin' %}"> {# Asumo que tienes una url llamada dashboard_admin #}
+    <a href="{% url 'dashboard_admin' %}"> 
         <img src="{% static 'icons/dashboard.svg' %}" alt="">
         <span>Dashboard</span>
     </a>
 </li>
 <li>
-    {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
     <a href="{% url 'main_usuario' %}" class="selected">
         <img src="{% static 'icons/users.svg' %}" alt="">
         <span>Gestión de Usuarios</span>
@@ -119,7 +118,6 @@
 
 {% block extra_css %}
 <style>
-    /* ----- Contenedores de Botones ----- */
     .action-buttons-header {
         margin-bottom: 1.5rem;
     }
@@ -127,7 +125,6 @@
         margin-top: 1.5rem;
     }
 
-    /* ----- Estilos de Botones ----- */
     .btn {
         display: inline-block;
         padding: 0.5rem 1rem;
@@ -136,7 +133,7 @@
         text-align: center;
         text-decoration: none;
         color: white;
-        background-color: #6c757d; /* Gris secundario por defecto */
+        background-color: #6c757d; 
         border: none;
         border-radius: 0.3rem;
         cursor: pointer;
@@ -147,27 +144,26 @@
     }
     
     .btn-primary {
-        background-color: var(--color-principal); /* Azul */
+        background-color: var(--color-principal); 
         color: white;
     }
     .btn-secondary {
-        background-color: #6c757d; /* Gris */
+        background-color: #6c757d; 
         color: white;
     }
     .btn-info {
-        background-color: #17a2b8; /* Azul info */
+        background-color: #17a2b8; 
         color: white;
     }
     .btn-warning {
-        background-color: var(--advertencia); /* Amarillo */
+        background-color: var(--advertencia); 
         color: var(--texto-principal);
     }
     .btn-danger {
-        background-color: var(--error); /* Rojo */
+        background-color: var(--error); 
         color: white;
     }
 
-    /* Botones pequeños para la tabla */
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.8rem;
@@ -176,16 +172,15 @@
         margin-right: 0.25rem;
     }
     .action-links {
-        white-space: nowrap; /* Evita que los botones se partan */
+        white-space: nowrap; 
     }
 
-    /* ----- Estilos de Tabla ----- */
     .table-container {
         background: #FFFFFF;
         border-radius: 0.5rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         border: 1px solid var(--border-color);
-        overflow-x: auto; /* Para responsividad en tablas */
+        overflow-x: auto; 
     }
     .data-table {
         width: 100%;
@@ -208,10 +203,9 @@
         border-bottom: none;
     }
     .data-table tr:hover {
-        background-color: #f8f9fa; /* Un hover muy sutil */
+        background-color: #f8f9fa; 
     }
 
-    /* ----- Badges de Estado ----- */
     .badge {
         display: inline-block;
         padding: 0.3em 0.6em;
@@ -221,18 +215,17 @@
         text-align: center;
         white-space: nowrap;
         vertical-align: baseline;
-        border-radius: 10rem; /* Píldora */
+        border-radius: 10rem; 
     }
     .badge-success {
         color: #fff;
-        background-color: var(--completado); /* Verde */
+        background-color: var(--completado); 
     }
     .badge-danger {
         color: #fff;
-        background-color: var(--error); /* Rojo */
+        background-color: var(--error); 
     }
 
-    /* ----- Mensajes de Alerta ----- */
     .messages-container {
         list-style: none;
         padding: 0;

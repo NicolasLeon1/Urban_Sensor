@@ -31,7 +31,6 @@
         </ul>
     {% endif %}
 
-    <!-- SECCIÓN DE RECHAZO DESTACADA -->
     {% if solicitud.estado == 'rechazada' %}
     <div class="rechazo-seccion">
         <div class="rechazo-header">
@@ -187,7 +186,6 @@
         </form>
     </div>
 
-    <!-- Formulario oculto para cancelar incidencia -->
     {% if solicitud.estado == 'rechazada' %}
     <form method="POST" action="{% url 'cancelar_incidencia' solicitud.id %}" id="cancelarForm" style="display: none;">
         {% csrf_token %}
@@ -212,7 +210,6 @@
         gap: 1rem;
     }
 
-    /* Sección de rechazo destacada */
     .rechazo-seccion {
         background-color: #fff8f8;
         border: 2px solid var(--error);
@@ -312,7 +309,6 @@
     .message.success { color: #0f5132; background-color: #d1e7dd; border-color: #badbcc; }
     .message.error { color: #842029; background-color: #f8d7da; border-color: #f5c2c7; }
 
-    /* Estilos para vista previa y archivos existentes */
     .vista-previa-container, .archivos-existente-container {
         margin-top: 1rem;
         padding: 1.5rem;
@@ -513,7 +509,6 @@
             updateVistaPrevia();
         };
 
-        // Función para confirmar cancelación de incidencia
         window.confirmarCancelacion = function() {
             if (confirm('¿Está seguro de que desea cancelar esta incidencia? Esta acción no se puede deshacer.')) {
                 document.getElementById('cancelarForm').submit();

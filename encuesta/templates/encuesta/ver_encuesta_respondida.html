@@ -342,7 +342,6 @@
         margin-bottom: 1rem; 
     }
 
-    /* Sección de rechazo destacada */
     .rechazo-seccion {
         background-color: #fff8f8;
         border: 2px solid var(--error);
@@ -379,7 +378,6 @@
         border-left: 4px solid var(--error);
     }
 
-    /* Descripción del incidente */
     .descripcion-incidente {
         background-color: #f8f9fa;
         padding: 1rem;
@@ -389,7 +387,6 @@
         line-height: 1.5;
     }
 
-    /* Lista de Preguntas y Respuestas */
     .pregunta-list {
         margin-left: 0;
         color: var(--text-color);
@@ -417,7 +414,6 @@
         border-radius: 0.3rem;
     }
 
-    /* Archivos adjuntos */
     .archivos-lista {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -670,7 +666,6 @@
 
 {% block extra_js %}
 <script>
-    // Función para abrir vista previa de archivos
     function abrirVistaPrevia(url, tipoContenido) {
         const modal = document.getElementById('modalVistaPrevia');
         const modalBody = document.getElementById('modal-body');

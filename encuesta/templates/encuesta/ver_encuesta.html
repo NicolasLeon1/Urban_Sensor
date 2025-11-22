@@ -2,13 +2,12 @@
 {% load static %}
 {% block sidebar_content %}
 <li>
-    <a href="{% url 'dashboard_admin' %}"> {# Asumo que tienes una url llamada dashboard_admin #}
+    <a href="{% url 'dashboard_admin' %}"> 
         <img src="{% static 'icons/dashboard.svg' %}" alt="">
         <span>Dashboard</span>
     </a>
 </li>
 <li>
-    {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
     <a href="{% url 'main_usuario' %}">
         <img src="{% static 'icons/users.svg' %}" alt="">
         <span>Gestión de Usuarios</span>
@@ -125,7 +124,6 @@
     .form-divider { border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0; }
     .form-subtitle { color: var(--color-principal); font-size: 1.2rem; margin-bottom: 1rem; }
 
-    /* Lista de Preguntas */
     .pregunta-list {
         margin-left: 1.5rem;
         color: var(--text-color);
@@ -135,13 +133,11 @@
         font-size: 1.05rem;
     }
 
-    /* Botones */
     .action-buttons-footer { margin-top: 1.5rem; }
     .btn { display: inline-block; padding: 0.6rem 1.25rem; font-size: 0.95rem; font-weight: 500; text-align: center; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 0.3rem; cursor: pointer; transition: opacity 0.2s ease; }
     .btn:hover { opacity: 0.85; }
     .btn-secondary { background-color: #6c757d; color: white; }
 
-    /* Badges */
     .badge { display: inline-block; padding: 0.3em 0.6em; font-size: 0.85rem; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 10rem; }
     .badge-success { color: #fff; background-color: var(--completado); }
     .badge-danger { color: #fff; background-color: var(--error); }
