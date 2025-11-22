@@ -80,9 +80,9 @@ python manage.py create-profiles
 # Genera el usuario administrador principal del sistema.
 python manage.py create-secpla
 
-# 3. Generar Datos de Prueba
-# Crea usuarios ficticios para cada rol (Dirección, Departamento, Cuadrilla, Territorial)
-# ideal para probar el flujo completo de la aplicación.
+
+Crear usuarios ficticios para cada rol (Dirección, Departamento, Cuadrilla, Territorial)
+ideal para probar el flujo completo de la aplicación.
 python manage.py create-test
 
 Ejecutar el Servidor
