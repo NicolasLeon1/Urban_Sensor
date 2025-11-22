@@ -6,9 +6,16 @@ urlpatterns = [
     path('first_session/', views.first_session, name='first_session'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout, name='logout'),
+<<<<<<< HEAD
     path('reset_password/', views.password_reset, name='password_reset'),
     path('reset_password_sent/', views.password_reset_done, name='password_reset_done'),
     path('reset/', views.password_reset_confirm, name='password_reset_confirm'),
     path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(template_name="register/password_reset_complete.html"), name='password_reset_complete'),
     path('reenviar_codigo/', views.reenviar_codigo, name='reenviar_codigo'),
+=======
+    path('reset_password/', auth_views.PasswordResetView.as_view(template_name="register/password_reset_form.html"), name='password_reset'),
+    path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(template_name="register/password_reset_done.html"), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name="register/password_reset_confirm.html"), name='password_reset_confirm'),
+    path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(template_name="register/password_reset_complete.html"), name='password_reset_complete'),
+>>>>>>> 749a14114617714c2e032e2cec0b12a8f1bb7853
 ]
