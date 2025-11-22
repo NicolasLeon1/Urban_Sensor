@@ -69,7 +69,7 @@
                 
                 <div class="form-group">
                     <label for="id_direccion" class="form-label">Dirección</label>
-                    <select name="id_direccion" id="id_direccion" class="form-select" required>
+                    <select name="id_direccion" id="id_direccion" class="form-select">
                         <option value="">Seleccione una dirección</option>
                         {% for direccion in direcciones %}
                             <option value="{{ direccion.id_direccion }}">{{ direccion }}</option>
@@ -79,7 +79,7 @@
                 
                 <div class="form-group" id="departamento-field">
                     <label for="id_departamento" class="form-label">Departamento</label>
-                    <select name="id_departamento" id="id_departamento" class="form-select" required>
+                    <select name="id_departamento" id="id_departamento" class="form-select">
                         <option value="">Elija una opción</option>
                         {% for departamento in departamentos %}
                             <option value="{{ departamento.id }}" data-direccion="{{ departamento.direccion.id_direccion }}">

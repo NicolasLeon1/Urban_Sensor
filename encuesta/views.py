@@ -5,11 +5,33 @@ from .models import Encuesta, Pregunta, ArchivoSolicitud
 from departamento.models import Departamento
 from incidencia.models import TipoIncidencia, SolicitudIncidencia, RespuestaSolicitud
 from django.db import transaction
+from django.db.models.functions import Length   # <-- NUEVO
+
+# Helper para filtrar solo tipos de incidencia válidos
+def tipos_incidencia_validos():
+    """
+    Devuelve solo los tipos de incidencia 'válidos':
+    - Activos
+    - Nombre con 8 o más caracteres
+    - Con Dirección y Departamento asignados
+    """
+    return (
+        TipoIncidencia.objects
+        .annotate(nombre_largo=Length('nombre_incidencia'))
+        .filter(
+            activo=True,
+            nombre_largo__gte=8,
+            id_direccion__isnull=False,
+            id_departamento__isnull=False,
+        )
+    )
+
 
 @secpla_required
 def main_encuesta(request):
     encuesta_listado = Encuesta.objects.order_by('-creado')
     return render(request, 'encuesta/main_encuesta.html', {'encuesta_listado': encuesta_listado})
+
 
 @secpla_required
 def nueva_encuesta(request):
@@ -50,12 +72,14 @@ def nueva_encuesta(request):
             return redirect('nueva_encuesta')
     else:
         departamentos = Departamento.objects.filter(activo=True)
-        tipo_incidencias = TipoIncidencia.objects.filter(activo=True)
+        # 🔹 Solo tipos de incidencia válidos (no rechazados)
+        tipo_incidencias = tipos_incidencia_validos()
         return render(request, 'encuesta/nueva_encuesta.html', {
             'departamentos': departamentos,
             'tipo_incidencias': tipo_incidencias,
             'prioridades': Encuesta.PRIORIDADES
         })
+
 
 @secpla_required
 def ver_encuesta(request, id):
@@ -70,6 +94,7 @@ def ver_encuesta(request, id):
     except Encuesta.DoesNotExist:
         messages.error(request, 'La encuesta no existe')
         return redirect('main_encuesta')
+
 
 @secpla_required
 def editar_encuesta(request, id):
@@ -142,7 +167,8 @@ def editar_encuesta(request, id):
             encuesta_data = Encuesta.objects.get(pk=id)
             preguntas = Pregunta.objects.filter(id_encuesta=encuesta_data)
             departamentos = Departamento.objects.filter(activo=True)
-            tipo_incidencias = TipoIncidencia.objects.filter(activo=True)
+            # 🔹 Solo tipos de incidencia válidos (no rechazados)
+            tipo_incidencias = tipos_incidencia_validos()
             
             return render(request, 'encuesta/editar_encuesta.html', {
                 'encuesta_data': encuesta_data,
@@ -154,6 +180,7 @@ def editar_encuesta(request, id):
         except Encuesta.DoesNotExist:
             messages.error(request, 'La encuesta no existe')
             return redirect('main_encuesta')
+
 
 @secpla_required
 def toggle_encuesta(request, id):
@@ -170,6 +197,7 @@ def toggle_encuesta(request, id):
         messages.error(request, 'La encuesta no existe')
         return redirect('main_encuesta')
 
+
 @secpla_required
 def eliminar_encuesta(request, id):
     try:
@@ -184,6 +212,7 @@ def eliminar_encuesta(request, id):
         messages.error(request, 'La encuesta no existe')
         return redirect('main_encuesta')
 
+
 @territorial_required
 def listar_encuestas_responder(request):
     encuestas_activas = Encuesta.objects.filter(activo=True).select_related(
@@ -194,6 +223,7 @@ def listar_encuestas_responder(request):
     return render(request, 'encuesta/listar_encuestas_responder.html', {
         'encuestas_listado': encuestas_activas
     })
+
 
 @territorial_required
 @transaction.atomic
@@ -289,6 +319,7 @@ def responder_encuesta(request, id_encuesta):
             'preguntas': preguntas
         })
 
+
 @check_perfil(Perfiles.TERRITORIAL, Perfiles.DEPARTAMENTO, Perfiles.CUADRILLA, Perfiles.DIRECCION)
 def ver_encuesta_respondida(request, id):
     try:
@@ -330,6 +361,7 @@ def ver_encuesta_respondida(request, id):
     }
     
     return render(request, 'encuesta/ver_encuesta_respondida.html', context)
+
 
 @territorial_required
 def editar_encuesta_respondida(request, id):
