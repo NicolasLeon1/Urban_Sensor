@@ -1,6 +1,23 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block sidebar_content %}
+<li>
+    <a href="{% url 'to_dashboard' %}" class="selected">
+        <img src="{% static 'icons/dashboard.svg' %}" alt="">
+        <span>Dashboard</span>
+    </a>
+</li>
+
+<li class="separator"></li>
+<li>
+    <a href="{% url 'logout' %}">
+        <img src="{% static 'icons/logout.svg' %}" alt="">
+        <span>Cerrar Sesión</span>
+    </a>
+</li>
+{% endblock %}
+
 {% block content %}
     
     <h1 style="color: var(--color-principal);">Resolver Incidencia</h1>
@@ -263,7 +280,7 @@
                 
                 <button type="submit" class="btn btn-success">
                     <i class="fas fa-check-circle"></i>
-                    Finalizar Incidencia
+                    Resolver Incidencia
                 </button>
             </div>
 
@@ -404,26 +421,30 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.6rem 1.25rem; 
-        font-size: 0.95rem; 
-        font-weight: 500; 
-        text-align: center; 
-        text-decoration: none; 
-        color: white; 
-        background-color: var(--color-principal); 
-        border: none; 
-        border-radius: 0.3rem; 
-        cursor: pointer; 
-        transition: opacity 0.2s ease; 
+        padding: 0.6rem 1.25rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+        background-color: var(--color-principal);
+        border: none;
+        border-radius: 0.3rem;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
     }
     .btn:hover { opacity: 0.85; }
     
     .btn-success { 
-        background-color: var(--completado); 
+        background-color: var(--completado);
+        padding-left: 0.2rem;
+        padding-right: 0.6rem;
     }
     .btn-secondary { 
         background-color: #6c757d; 
-        color: white; 
+        color: white;
+        padding-left: 0.2rem;
+        padding-right: 0.6rem;
     }
     .btn-download {
         background-color: var(--completado);

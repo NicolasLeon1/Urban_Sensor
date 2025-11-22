@@ -10,7 +10,6 @@ from direccion.models import Direccion
 import string
 import secrets
 
-# Vista principal - Listar usuarios
 @secpla_required
 def main_usuario(request):
     usuario_listado = User.objects.order_by('nombre')

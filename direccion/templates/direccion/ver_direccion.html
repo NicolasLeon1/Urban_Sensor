@@ -9,7 +9,7 @@
 </li>
 <li>
     {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
-    <a href="{% url 'main_usuario' %}" class="selected">
+    <a href="{% url 'main_usuario' %}">
         <img src="{% static 'icons/users.svg' %}" alt="">
         <span>Gestión de Usuarios</span>
     </a>
@@ -21,7 +21,7 @@
     </a>
 </li>
 <li>
-    <a href="{% url 'main_direccion' %}">
+    <a href="{% url 'main_direccion' %}" class="selected">
         <img src="{% static 'icons/location.svg' %}" alt="">
         <span>Módulo Dirección</span>
     </a>
