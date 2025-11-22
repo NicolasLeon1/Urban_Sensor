@@ -9,13 +9,13 @@
 </li>
 <li>
     {# Aquí agregamos la clase selected porque estamos en la sección de usuarios #}
-    <a href="{% url 'main_usuario' %}" class="selected">
+    <a href="{% url 'main_usuario' %}">
         <img src="{% static 'icons/users.svg' %}" alt="">
         <span>Gestión de Usuarios</span>
     </a>
 </li>
 <li>
-    <a href="{% url 'main_encuesta' %}">
+    <a href="{% url 'main_encuesta' %}" class="selected">
         <img src="{% static 'icons/survey.svg' %}" alt="">
         <span>Módulo Encuesta</span>
     </a>

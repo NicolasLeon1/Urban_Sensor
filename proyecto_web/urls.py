@@ -31,7 +31,12 @@ urlpatterns = [
     path('encuesta/', include('encuesta.urls')),
     path('departamento/', include('departamento.urls')),
     path('dashboard/', include('dashboard.urls')),
+<<<<<<< HEAD
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+=======
+    path('', include(('register.urls', 'register'), namespace='register')),
+]
+>>>>>>> 749a14114617714c2e032e2cec0b12a8f1bb7853

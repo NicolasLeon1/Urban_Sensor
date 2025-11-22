@@ -7,9 +7,10 @@ from .models import User, Profile, Perfiles
 from departamento.models import Departamento
 from direccion.models import Direccion
 from register.utils import *
+from django.core.mail import send_mail
 import hashlib
-
-# Create your views here.
+import string
+import secrets
 
 @login_required
 def first_session(request):
@@ -109,3 +110,101 @@ def logout(request):
     messages.success(request, 'Has cerrado sesión correctamente.')
     
     return response
+
+def password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        if not email:
+            messages.error(request, 'Debe ingresar su correo de usuario.')
+            return redirect('password_reset')
+        try:
+            user = User.objects.get(email=email)
+        except:
+            messages.error(request, 'No existe un usuario con ese correo, ingrese un correo valido.')
+            return redirect('password_reset')
+        characters = string.ascii_letters.upper() + string.digits
+        codigo = ''.join(secrets.choice(characters) for _ in range(6))
+        try:
+            send_mail(
+                subject="Cambio de contraseña Municipalidad",
+                message=f"Se ha solicitado el cambio de contraseña para su cuenta en la Municipalidad.\nEl codigo de recuperacion es: {codigo}",
+                from_email='urban_sensor@municipalidad.cl',
+                recipient_list=[email],
+                fail_silently=False
+            )
+            messages.success(request, 'Código enviado exitosamente.')
+        except:
+            messages.error('Hubo un error al enviar el email de recuperacion.')
+            return redirect('password_reset')
+        request.session['reset_code'] = codigo
+        request.session['reset_email'] = email
+        return redirect('password_reset_done')
+
+    else:
+        return render(request, 'register/password_reset_form.html')
+
+def reenviar_codigo(request):
+    email = request.session.get('reset_email')
+    codigo = request.session.get('reset_code')
+    
+    if not email or not codigo:
+        messages.error(request, 'No hay una solicitud de recuperación activa.')
+        return redirect('password_reset')
+    try:
+        send_mail(
+            subject="Cambio de contraseña Municipalidad",
+            message=f"Se ha solicitado el cambio de contraseña para su cuenta en la Municipalidad.\nEl codigo de recuperacion es: {codigo}",
+            from_email='urban_sensor@municipalidad.cl',
+            recipient_list=[email],
+            fail_silently=False
+        )
+        messages.success(request, 'Código reenviado exitosamente.')
+    except:
+        messages.error('Hubo un error al enviar el email de recuperacion.')
+        return redirect('password_reset_done')
+    return redirect('password_reset_done')
+
+def password_reset_done(request):
+    if request.method == 'POST':
+        codigo_ingresado = request.POST.get('codigo')
+        codigo_correcto = request.session.get('reset_code')
+        
+        if not codigo_ingresado:
+            messages.error(request, 'Debe ingresar el código de verificación.')
+            return render(request, 'register/password_reset_done.html')
+        
+        if codigo_ingresado == codigo_correcto:
+            return redirect('password_reset_confirm')
+        else:
+            messages.error(request, 'Código incorrecto. Intente nuevamente.')
+    
+    return render(request, 'register/password_reset_done.html')
+
+def password_reset_confirm(request):
+    if request.method == 'POST':
+        new_password1 = request.POST.get('new_password1')
+        new_password2 = request.POST.get('new_password2')
+        email = request.session.get('reset_email')
+        
+        if new_password1 != new_password2:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'register/password_reset_confirm.html')
+        
+        try:
+            user = User.objects.get(email=email)
+        except:
+            messages.error(request, 'No existe un usuario con ese correo, ingrese un correo valido.')
+            return redirect('password_reset_confirm')
+        
+        is_valid, errors = User.validar_contraseña(new_password1, user.username, user.nombre, user.apellido)
+        if not is_valid:
+            for error in errors:
+                messages.error(request, error)
+            return redirect('password_reset_confirm')
+
+        user.set_password(new_password1)
+        user.save()
+        messages.success(request, 'Contraseña cambiada exitosamente.')
+        return redirect('login')
+    
+    return render(request, 'register/password_reset_confirm.html')

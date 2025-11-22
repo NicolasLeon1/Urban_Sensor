@@ -84,9 +84,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if reporte.prioridad == 'alta' %}
+                            {% if reporte.encuesta_base.prioridad == 'alta' %}
                                 <span class="badge badge-danger">Alta</span>
-                            {% elif reporte.prioridad == 'normal' %}
+                            {% elif reporte.encuesta_base.prioridad == 'media' %}
                                 <span class="badge badge-warning">Normal</span>
                             {% else %}
                                 <span class="badge badge-secondary">Baja</span>

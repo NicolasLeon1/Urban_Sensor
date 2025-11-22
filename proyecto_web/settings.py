@@ -86,9 +86,9 @@ DATABASES = {
     "default": {
         'HOST': 'localhost',
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'hola123',
+        'NAME': 'US',
         'USER': 'postgres',
-        'PASSWORD': '12345',
+        'PASSWORD': 'amanda',
         'PORT': '5432',
     }
 }
@@ -142,6 +142,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
